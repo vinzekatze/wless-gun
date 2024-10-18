@@ -39,8 +39,8 @@ script: |-
       { 
         echo $pubkey_input | grep -vsxf ~/.ssh/authorized_keys >> ~/.ssh/authorized_keys ;
       } &&
-      echo -e "\e[1;92m+++ PUBLIC KEY ADDED:\e[0m   $pubkey_input" ||
-      echo -e "\e[1;94m+++ PUBLIC KEY EXISTS:\e[0m  $pubkey_input" ;
+      echo -e "\e[1;92mPUBLIC KEY ADDED:\e[0m   $pubkey_input" ||
+      echo -e "\e[1;94mPUBLIC KEY EXISTS:\e[0m  $pubkey_input" ;
   } || 
-  echo -e "\e[1;91m+++ INVALID PUBLIC KEY:\e[0m $pubkey_input"
+  echo -e "\e[1;91mINVALID PUBLIC KEY:\e[0m $pubkey_input"
   

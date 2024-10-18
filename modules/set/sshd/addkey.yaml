@@ -1,0 +1,46 @@
+description: |-
+  Добавляет уникальные публичные ключи в ssh/authorized_keys.
+  На вход принимает как файлы, так и ключи в текстовом виде.
+  
+  С флагом --ncat будет получать ключи по сети. В keys в таком случае необходимо указать порт, на который будет слушать ncat
+
+  Передать ключи с другого устройства можно примрно так:
+    echo key.pub | ncat IP PORT
+
+author: vinzekatze
+tags:
+  - public
+  - authorized
+  - keys
+
+shell: bash
+
+arguments:
+  ncat:
+    description: получить ключи с помощью ncat
+    default:
+      - >-
+        cat #keys# 2>/dev/null || echo #keys#
+      - >-
+        ncat -l #keys#
+  keys:
+    description: публичные ключи / порт для ncat
+    multiple: true
+    
+mode:
+  loop: keys
+  format:
+    keys: '{0!r}'
+
+script: |-
+  pubkey_input=$(#ncat#)
+  echo $pubkey_input | ssh-keygen -l -f- &>/dev/null &&
+  {
+      { 
+        echo $pubkey_input | grep -vsxf ~/.ssh/authorized_keys >> ~/.ssh/authorized_keys ;
+      } &&
+      echo -e "\e[1;92m+++ PUBLIC KEY ADDED:\e[0m   $pubkey_input" ||
+      echo -e "\e[1;94m+++ PUBLIC KEY EXISTS:\e[0m  $pubkey_input" ;
+  } || 
+  echo -e "\e[1;91m+++ INVALID PUBLIC KEY:\e[0m $pubkey_input"
+  

@@ -1,0 +1,24 @@
+description: |-
+  Настраивает sshd на вход только по ключу
+author: vinzekatze
+tags:
+  - sshd
+  - config
+
+shell: bash
+
+file_1:
+  description: конфиг ssh
+  path: config/sshd_config
+
+script: |-
+  sudo service ssh stop
+  sudo cp /etc/ssh/sshd_config /etc/ssh/sshd_config_$(date +%s).backup
+  sudo cp '#file_1#' /etc/ssh/sshd_config
+  mkdir -p ~/.ssh
+  chmod 0700 ~/.ssh
+  touch ~/.ssh/authorized_keys
+  chmod 0644 ~/.ssh/authorized_keys
+  sudo systemctl enable ssh.service
+  sudo service ssh start
+

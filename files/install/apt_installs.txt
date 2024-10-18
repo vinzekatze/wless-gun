@@ -1,0 +1,8 @@
+nmap
+ncat
+ipcalc-ng
+makepasswd
+openssh-server
+dnsmasq
+hostapd
+iptables-persistent

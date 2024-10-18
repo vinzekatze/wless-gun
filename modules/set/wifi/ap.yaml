@@ -1,0 +1,166 @@
+description: |-
+  Создает точку доступа на выбранном интерфейсе (переименует в ap0wlan).
+author: vinzekatze
+tags:
+  - wifi
+  - access
+  - point
+
+arguments:
+  interface:
+    description: имя беспроводного интерфейса
+    default:
+  
+  net:
+    description: сеть точки доступа
+    default: 192.168.10.0/24
+    regex: '^((25[0-5]|(2[0-4]|1\d|[1-9]|)\d)\.?\b){4}\/(30|[1-2]\d|\d)$'
+    metavar: 'CIDR'
+
+  ssid:
+    description: название точки доступа
+    default: wless-gun
+    metavar: NAME
+  
+  pass:
+    description: пароль (8-63 символов). По умолчанию генерирует сам.
+    default:
+      -
+    regex: '^.{8,63}$'
+    metavar: PASSWORD
+  
+  hidden:
+    description: скрытая точка доступа
+    default:
+      - 0
+      - 1
+  
+shell: bash
+
+mode:
+  format:
+    interface: '{0!r}'
+    net: '{0!r}'
+    ssid: '{0!r}'
+    pass: '{0!r}'
+
+file_1:
+  path: config/interfaces.conf
+  description: шаблон конфига /etc/network/interfaces
+
+file_2:
+  path: config/hostapd.conf
+  description: шаблон конфига /etc/hostapd/hostapd.conf
+
+file_3:
+  path: config/dnsmasq.conf
+  description: шаблон конфига /etc/dnsmasq.conf
+
+file_4:
+  path: config/70-persistent-net.rules
+  description: шаблон строки /etc/udev/rules.d/70-persistent-net.rules
+    
+
+script: |-
+  ### Проверки
+  error_msg="Required software not found. Please use the installation script:\n\nbshm use install --help\n"
+  ipcalc-ng -v 1>/dev/null || { echo; echo -e $error_msg; exit ; }
+  makepasswd -v 1>/dev/null || { echo; echo -e $error_msg; exit ; }
+  sudo systemctl is-enabled hostapd | grep 'not-found' && { echo; echo -e $error_msg; exit ; }
+  dnsmasqe -v 1>/dev/null || { echo; echo -e $error_msg; exit ; }
+  iw dev #interface# info 2>&1 1>/dev/null || { echo "Device #interface#" not found; exit ; }
+  
+  ### Функции
+  # backuping <path>
+  function backuping {
+    local bckp_target=$1
+    local bckp_file="${bckp_target}.backup.$(date +'%Y%m%d_%H%M%S')"
+    local bckp_err
+    bckp_err=$(sudo cp $bckp_target $bckp_file 2>&1) && 
+      echo -e "$bckp_target backup: \e[1;92mOK\e[0m ($bckp_file)" ||
+      echo -e "$bckp_target backup: \e[1;91mERROR\e[0m ($bckp_err)"
+    }
+
+  # makeconfig <input_file> <target_file> <sed_string>
+  function makeconfig {
+    local input_file=$1
+    local target_file=$2
+    local sedstr=$3
+    local conf_err
+    conf_err=$(sed $sedstr $input_file | sudo tee $target_file 2>&1 1>/dev/null) &&
+      echo -e "$target_file configuration: \e[1;92mOK\e[0m" ||
+      echo -e "$target_file configuration: \e[1;91mERROR\e[0m ($conf_err)"
+  }
+
+  # startservice <service>
+  function startservice {
+    sudo systemctl is-enabled $1 -q || sudo systemctl enable $1
+    sudo systemctl restart $1
+  }
+
+  # stopservice <service>
+  function stopservece {
+    sudo systemctl is-active $1 -q &&
+    sudo systemctl stop $1
+  }
+
+  ### Скрипт
+  # Получение входных параметров
+  ssid=#ssid#
+  interface=#interface#
+  pass=#pass#
+  test $pass || pass=$(makepasswd --chars=16)
+  while read var
+  do
+      export "$var"
+  done <<< $(ipcalc-ng #net# --minaddr --maxaddr -m -n -p)
+  FIRSTADDR=$(echo $MINADDR | awk -F"." '{print $1"."$2"."$3"."$4+1}')
+  iwdevmac=$(sudo iw dev $interface info | grep addr | awk -F'addr ' '{print $2}')
+
+  echo 
+  echo Access point parameters:
+  echo -e "\e[1;92mSSID:\e[0m      $ssid"
+  echo -e "\e[1;92mPASSWORD:\e[0m  $pass"
+  echo -e "\e[1;92mINTERFACE:\e[0m $iwdevmac"
+  echo -e "\e[1;92mNETWORK:\e[0m   $MINADDR/$PREFIX"
+  echo
+
+  echo "Stoping services..."
+  stopservice dnsmasq
+  stopservice hostapd
+  sudo systemctl unmask hostapd
+  stopservice networking
+
+  echo "Configuring wifi interface..."
+  sudo ip link set $interface down
+  sudo ip link set $interface name ap0wlan
+  sudo ip link set $interface up
+  backuping /etc/udev/rules.d/70-persistent-net.rules
+  { sudo cat /etc/udev/rules.d/70-persistent-net.rules 2>/dev/null | grep -v $iwdevmac 2>/dev/null; cat #file_4# ; } > /tmp/70-persistent-net.rules.tmp
+  makeconfig /tmp/70-persistent-net.rules.tmp /etc/udev/rules.d/70-persistent-net.rules "s/___iwdevmac___/$iwdevmac/;s/___ivdevname___/ap0wlan/"
+  rm /tmp/70-persistent-net.rules.tmp
+  echo
+
+  echo "Configuring network interface..."
+  backuping /etc/network/interfaces
+  makeconfig #file_1# /etc/network/interfaces "s/___interface___/ap0wlan/;s/___address___/$MINADDR/;s/___netmask___/$NETMASK/"
+  echo
+
+  echo "Configuring hostapd..."
+  sudo mkdir -p /etc/hostapd
+  backuping /etc/hostapd/hostapd.conf
+  makeconfig #file_2# /etc/hostapd/hostapd.conf "s/___interface___/ap0wlan/;s/___ssid___/$ssid/;s/___pass___/$pass/;s/___hidden___/#hidden#/"
+  echo
+
+  echo "Configuring dnsmasq..."
+  backuping /etc/dnsmasq.conf
+  makeconfig #file_3# /etc/dnsmasq.conf "s/___interface___/ap0wlan/;s/___firstaddr___/$FIRSTADDR/;s/___lastaddr___/$MAXADDR/;s/___netmask___/$NETMASK/;s/___ip___/$MINADDR/"
+  echo
+
+  echo "Launching services..."
+  startservice networking
+  startservice hostapd
+  startservice dnsmasq
+  
+  echo
+  echo "Done!" 

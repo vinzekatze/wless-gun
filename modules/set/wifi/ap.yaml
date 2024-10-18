@@ -116,6 +116,8 @@ script: |-
   done <<< $(ipcalc-ng #net# --minaddr --maxaddr -m -n -p)
   FIRSTADDR=$(echo $MINADDR | awk -F"." '{print $1"."$2"."$3"."$4+1}')
   iwdevmac=$(sudo iw dev $interface info | grep addr | awk -F'addr ' '{print $2}')
+  iwdevmac_ap0wlan=$({ sudo iw dev ap0wlan info 2>/dev/null || echo " addr $iwdevmac" ; } | grep addr | awk -F'addr ' '{print $2}' )
+  [[ "$iwdevmac" == "$iwdevmac_ap0wlan" ]] || { echo "Name ap0wlan is already taken by device $iwdevmac_ap0wlan"; exit ; }
 
   echo 
   echo WPA2-PSK access point parameters:
@@ -161,6 +163,6 @@ script: |-
   startservice networking
   startservice hostapd
   startservice dnsmasq
-  
   echo
+  
   echo "Done!" 

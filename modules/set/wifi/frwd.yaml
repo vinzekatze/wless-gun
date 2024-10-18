@@ -1,0 +1,23 @@
+
+
+arguments:
+  interface:
+    description:
+    default:
+  ap:
+    description:
+    default: ap0wlan
+    metavar: INTERFACE
+  
+shell: bash
+
+script: |-
+  ap_interface=#ap#
+  trg_interface=#interface#
+
+  iw dev $ap_interface info 2>&1 1>/dev/null || { echo "Device $ap_interface" not found; exit ; }
+  iw dev $trg_interface info 2>&1 1>/dev/null || { echo "Device $trg_interface" not found; exit ; }
+
+  iptables_sets=$(sudo iptables-save)
+
+  

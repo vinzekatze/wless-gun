@@ -99,7 +99,7 @@ script: |-
   }
 
   # stopservice <service>
-  function stopservece {
+  function stopservice {
     sudo systemctl is-active $1 -q &&
     sudo systemctl stop $1
   }

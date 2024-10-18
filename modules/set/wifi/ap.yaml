@@ -136,7 +136,7 @@ script: |-
   sudo ip link set $interface name ap0wlan
   sudo ip link set ap0wlan up
   backuping /etc/udev/rules.d/70-persistent-net.rules
-  { sudo cat /etc/udev/rules.d/70-persistent-net.rules 2>/dev/null | grep -v -e '$iwdevmac' -e 'NAME="ap0wlan"' 2>/dev/null; cat #file_4# ; } > /tmp/70-persistent-net.rules.tmp
+  { sudo cat /etc/udev/rules.d/70-persistent-net.rules 2>/dev/null | grep -v -e "$iwdevmac" -e 'NAME="ap0wlan"' 2>/dev/null; cat #file_4# ; } > /tmp/70-persistent-net.rules.tmp
   makeconfig /tmp/70-persistent-net.rules.tmp /etc/udev/rules.d/70-persistent-net.rules "s/___iwdevmac___/$iwdevmac/;s/___ivdevname___/ap0wlan/"
   rm /tmp/70-persistent-net.rules.tmp
   echo

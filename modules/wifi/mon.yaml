@@ -1,0 +1,43 @@
+description: Переводит интерфейс в режим мониторинга и обратно
+author: vinzekatze
+tags:
+  - monitor
+  - mode
+  - wlan
+
+shell: bash
+
+arguments:
+  interface:
+    default:
+    description: имя интерфейса
+
+  monitor:
+    default:
+      -
+      - 'on'
+      - 'off'
+    description: статус режима мониторинга
+
+mode:
+  format:
+    interface: '{0!r}'
+  replace:
+    monitor:
+      'on': |-
+          sudo nmcli dev set $interface managed no
+          sudo ip link set $interface down
+          sudo iw $interface set monitor control
+          sudo ip link set $interface up
+      'off': |-
+          sudo ip link set $interface down
+          sudo iw $interface set type managed
+          sudo ip link set $interface up
+          sudo nmcli dev set $interface managed yes
+
+script: |-
+  interface=#interface#
+  iw dev $interface info 2>&1 1>/dev/null || { echo "Device $interface not found"; exit ; }
+  #monitor#
+  esc=$(printf '\033')
+  sudo iw dev | sed "s/type monitor/${esc}[91m&${esc}[0m/;s/type managed/${esc}[92m&${esc}[0m/;s/type AP/${esc}[93m&${esc}[0m/"

@@ -68,7 +68,7 @@ script: |-
   makepasswd -v 1>/dev/null || { echo; echo -e $error_msg; exit ; }
   sudo systemctl is-enabled hostapd | grep 'not-found' && { echo; echo -e $error_msg; exit ; }
   dnsmasq -v 1>/dev/null || { echo; echo -e $error_msg; exit ; }
-  iw dev #interface# info 2>&1 1>/dev/null || { echo "Device #interface#" not found; exit ; }
+  iw dev #interface# info 2>&1 1>/dev/null || { echo "Device #interface# not found"; exit ; }
   
   ### Функции
   # backuping <path>

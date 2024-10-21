@@ -1,0 +1,119 @@
+#!/bin/bash
+# Prompt for SSID and Passphrase
+ssid='ktzwrlgun'
+passphrase='xxxxxxxxxxxx'
+interface='wlan0'
+internet_int='usb0'
+
+#Instalations
+echo "Installing software..."
+sudo apt install -y dnsmasq
+sudo apt install -y hostapd
+sudo apt install -y iptables-persistent
+
+#Step 1: Set up wireless interface and set subnet.
+#sudo ip addr add 192.168.10.1/24 dev $interface
+#sudo ip link set "$interface" up
+
+
+# Stop services
+#sudo systemctl stop networking
+#sudo systemctl stop hostapd
+#sudo systemctl stop dnsmasq
+#sudo systemctl stop netfilter-persistent
+
+
+
+
+
+# Configure Network Interface
+echo "Configuring network interface..."
+sudo bash -c "cat <<EOF > /etc/network/interfaces
+source-directory /etc/network/interfaces.d
+auto $interface
+iface $interface inet static
+address 192.168.10.1
+netmask 255.255.255.0
+EOF"
+
+
+# Create WAP Configuration
+echo "Creating hostapd configuration..."
+sudo systemctl unmask hostapd
+sudo bash -c "cat > /etc/hostapd/hostapd.conf <<EOF
+interface=$interface
+driver=nl80211
+ssid=$ssid
+hw_mode=g
+channel=7
+wmm_enabled=0
+macaddr_acl=0
+auth_algs=1
+ignore_broadcast_ssid=1
+wpa=2
+wpa_passphrase=$passphrase
+wpa_key_mgmt=WPA-PSK
+wpa_pairwise=TKIP
+rsn_pairwise=CCMP
+EOF"
+
+# Configure DNS and DHCP
+echo "Configuring dnsmasq..."
+sudo bash -c "cat <<EOF > /etc/dnsmasq.conf
+interface=$interface
+dhcp-authoritative
+dhcp-range=192.168.10.50,192.168.10.150,12h
+dhcp-option=1,255.255.255.0
+dhcp-option=3,192.168.10.1
+dhcp-option=6,192.168.10.1
+EOF"
+
+
+
+
+# Step 5: Enable IPv4 Forwarding
+echo "Enabling IPv4 forwarding..."
+sudo bash -c 'echo "net.ipv4.ip_forward=1" > /etc/sysctl.conf'
+sudo sysctl -w net.ipv4.ip_forward=1
+
+# Step 6: Set NAT and Firewall Rules
+echo "Setting up iptables rules..."
+sudo mkdir -p /etc/iptables
+A
+# clean IP-tables
+sudo iptables-save | sudo tee ~/iptables_backup_$(date +%s).conf
+sudo iptables -F
+sudo iptables -t nat -F
+sudo iptables -t mangle -F
+sudo iptables -X
+
+# set
+internet_int=wlan0
+interface=ap0wlan
+
+sudo iptables -t nat -A POSTROUTING -o $internet_int -j MASQUERADE
+sudo iptables -F FORWARD
+sudo iptables -A FORWARD -m conntrack --ctstate RELATED,ESTABLISHED -j ACCEPT
+sudo iptables -A FORWARD -i $interface -o $internet_int -j ACCEPT
+sudo iptables-save | sudo tee /etc/iptables/rules.v4
+
+
+# Info
+echo "..."
+echo "SSID: $ssid"
+echo "PASS: $passphrase"
+echo "INTF: $interface"
+echo
+echo "Don't forget to reboot"
+
+# Start services
+sudo systemctl enable networking
+sudo systemctl enable hostapd
+sudo systemctl enable dnsmasq
+sudo systemctl enable netfilter-persistent
+
+sudo systemctl restart networking
+sudo systemctl restart hostapd
+sudo systemctl restart dnsmasq
+sudo systemctl restart netfilter-persistent
+

@@ -6,3 +6,22 @@ openssh-server
 dnsmasq
 hostapd
 iptables-persistent
+build-essential
+bc
+dkms
+debhelper dpkg-dev
+realtek-rtl88xxau-dkms
+realtek-rtl8814au-dkms
+aircrack-ng
+wifite
+airgeddon
+eaphammer
+bettercap
+kismet
+python-pyric
+python-jinja2
+wifiphisher
+mdk4
+routersploit
+wifipumpkin3
+reaver

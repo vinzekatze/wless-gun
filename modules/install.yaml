@@ -68,6 +68,7 @@ item_1:
 item_2:
   description: установка тулзов с помощью apt
   script: >-
+    sudo apt install -y linux-headers-$(uname -r);
     for tool in $(cat "#apt_installs#");
     do sudo apt install -y $tool &&
     echo -e "\e[1;92m+++ [APT] SUCCESSFULLY INSTALLED: $tool\e[0m" ||

@@ -1,0 +1,39 @@
+description: |-
+  Переименовывает интерфесы (до перезагрузки)
+author: vinzekatze
+tags:
+  - wifi
+  - wlan
+  - rename
+
+arguments:
+  interface:
+    description: имя беспроводного интерфейса
+    default:
+  newname:
+    description: новое имя
+    regex: '[a-z0-9]+'
+  
+mode:
+  format:
+    interface: '{0!r}'
+    newname: '{0!r}'
+
+shell: bash
+
+script: |-
+  ### Проверки
+  iw dev #interface# info 2>&1 1>/dev/null || { echo "Device #interface# not found"; exit ; }
+
+  # Получение входных параметров
+  interface=#interface#
+  newname=#newname#
+  iwdevmac=$(sudo iw dev $interface info | grep addr | awk -F'addr ' '{print $2}')
+  iwdevmac_newname=$({ sudo iw dev $newname info 2>/dev/null || echo " addr $iwdevmac" ; } | grep addr | awk -F'addr ' '{print $2}' )
+  [[ "$iwdevmac" == "$iwdevmac_newname" ]] || { echo "Name $newname is already taken by device $iwdevmac_newname"; exit ; }
+  # Смена имени
+  echo "Configuring wifi interface..."
+  sudo ip link set $interface down
+  sudo ip link set $interface name $newname
+  sudo ip link set $newname up
+  grepnewname='NAME="'$newname'"'

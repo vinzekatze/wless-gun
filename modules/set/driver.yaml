@@ -10,11 +10,12 @@ tags:
 
 arguments:
   action:
-    -
-    - add
-    - remove
-    - check
-  description: действие
+    default:
+      -
+      - add
+      - remove
+      - check
+    description: действие
   deviceid:
     description: id адаптера из lsusb (xxxx:xxxx)
   driver:

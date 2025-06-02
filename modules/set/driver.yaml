@@ -1,0 +1,85 @@
+description: |-
+  Управляет драйверами устройств.
+
+  Конфиг: /etc/udev/rules.d/99-wifi-drivers.rules
+author: vinzekatze
+tags:
+  - wifi
+  - wlan
+  - driver
+
+arguments:
+  action:
+    -
+    - add
+    - remove
+    - check
+  description: действие
+  deviceid:
+    description: id адаптера из lsusb (xxxx:xxxx)
+  driver:
+    description: имя драйвера
+
+file_1:
+  path: config/99-wifi-drivers.rules
+  description: шаблон строки файла 99-wifi-drivers.rules
+  
+shell: bash
+
+mode:
+  format:
+    deviceid: '{!r}'
+    driver: '{!r}'
+  replace:
+    action:
+      add: |-
+        backuping /etc/udev/rules.d/99-wifi-drivers.rules
+        { sudo cat /etc/udev/rules.d/99-wifi-drivers.rules 2>/dev/null | grep -v -e "ATTR{idVendor}==\"$idVendor\".*ATTR{idProduct}==\"$idProduct\"" 2>/dev/null; cat #file_1# ; } > /tmp/99-wifi-drivers.rules.tmp
+        makeconfig /tmp/99-wifi-drivers.rules.tmp /etc/udev/rules.d/99-wifi-drivers.rules "s/__idVendor__/$idVendor/;s/__idProduct__/$idProduct/;s/__driver__/$driver/"
+        rm /tmp/70-persistent-net.rules.tmp
+        sudo udevadm control --reload-rules
+        sudo update-initramfs -u
+        echo; echo "Don't forget to reboot"
+      remove: |-
+        backuping /etc/udev/rules.d/99-wifi-drivers.rules
+        sudo cat /etc/udev/rules.d/99-wifi-drivers.rules 2>/dev/null | grep -v -e "ATTR{idVendor}==\"$idVendor\".*ATTR{idProduct}==\"$idProduct\"" 2>/dev/null > /tmp/99-wifi-drivers.rules.tmp
+        cat /tmp/99-wifi-drivers.rules.tmp | sudo tee /etc/udev/rules.d/99-wifi-drivers.rules 2>&1 1>/dev/null
+        rm /tmp/70-persistent-net.rules.tmp
+        sudo udevadm control --reload-rules
+        sudo update-initramfs -u
+        echo; echo "Don't forget to reboot"
+      check: |-
+        esc=$(printf '\033')
+        sudo cat /etc/udev/rules.d/99-wifi-drivers.rules | sed "s/ATTR{idVendor}==\"$idVendor\"/${esc}[92m&${esc}[0m/;s/ATTR{idProduct}==\"$idProduct\"/${esc}[92m&${esc}[0m/;s/RUN+=\"\/sbin\/modprobe $driver\"/${esc}[91m&${esc}[0m/"
+
+script: |-
+  driver=#driver#
+  deviceid=#deviceid#
+  modprobe -n $driver 2>/dev/null || { echo "Driver $driver not found"; exit ; }
+  sudo lsusb | grep $deviceid || { echo "Device $deviceid not found"; exit ; }
+  idVendor=$(echo $deviceid | cut -f 1 -d:)
+  idProduct=$(echo $deviceid | cut -f 2 -d:)
+
+  ### Функции
+  # backuping <path>
+  function backuping {
+    local bckp_target=$1
+    local bckp_file="${bckp_target}.backup.$(date +'%Y%m%d_%H%M%S')"
+    local bckp_err
+    bckp_err=$(sudo cp $bckp_target $bckp_file 2>&1) && 
+      echo -e "$bckp_target backup: \e[1;92mOK\e[0m ($bckp_file)" ||
+      echo -e "$bckp_target backup: \e[1;91mERROR\e[0m ($bckp_err)"
+    }
+
+  # makeconfig <input_file> <target_file> <sed_string>
+  function makeconfig {
+    local input_file=$1
+    local target_file=$2
+    local sedstr=$3
+    local conf_err
+    conf_err=$(sed $sedstr $input_file | sudo tee $target_file 2>&1 1>/dev/null) &&
+      echo -e "$target_file configuration: \e[1;92mOK\e[0m" ||
+      echo -e "$target_file configuration: \e[1;91mERROR\e[0m ($conf_err)"
+  }
+
+  #action#

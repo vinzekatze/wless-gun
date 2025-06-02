@@ -1,0 +1,76 @@
+description: |-
+  Работает с именами интерфейсов.
+  
+  Конфиг: /etc/udev/rules.d/70-persistent-net.rules
+author: vinzekatze
+tags:
+  - wifi
+  - wlan
+  - rename
+
+arguments:
+  interface:
+    description: имя беспроводного интерфейса
+    default:
+  newname:
+    description: новое имя
+    regex: '[a-z0-9]+'
+
+file_1:
+  path: config/70-persistent-net.rules
+  description: шаблон строки /etc/udev/rules.d/70-persistent-net.rules
+
+mode:
+  format:
+    interface: '{0!r}'
+    newname: '{0!r}'
+
+shell: bash
+
+script: |-
+  ### Проверки
+  iw dev #interface# info 2>&1 1>/dev/null || { echo "Device #interface# not found"; exit ; }
+  
+  ### Функции
+  # backuping <path>
+  function backuping {
+    local bckp_target=$1
+    local bckp_file="${bckp_target}.backup.$(date +'%Y%m%d_%H%M%S')"
+    local bckp_err
+    bckp_err=$(sudo cp $bckp_target $bckp_file 2>&1) && 
+      echo -e "$bckp_target backup: \e[1;92mOK\e[0m ($bckp_file)" ||
+      echo -e "$bckp_target backup: \e[1;91mERROR\e[0m ($bckp_err)"
+    }
+
+  # makeconfig <input_file> <target_file> <sed_string>
+  function makeconfig {
+    local input_file=$1
+    local target_file=$2
+    local sedstr=$3
+    local conf_err
+    conf_err=$(sed $sedstr $input_file | sudo tee $target_file 2>&1 1>/dev/null) &&
+      echo -e "$target_file configuration: \e[1;92mOK\e[0m" ||
+      echo -e "$target_file configuration: \e[1;91mERROR\e[0m ($conf_err)"
+  }
+
+  # Получение входных параметров
+  interface=#interface#
+  newname=#newname#
+  iwdevmac=$(sudo iw dev $interface info | grep addr | awk -F'addr ' '{print $2}')
+  iwdevmac_newname=$({ sudo iw dev $newname info 2>/dev/null || echo " addr $iwdevmac" ; } | grep addr | awk -F'addr ' '{print $2}' )
+  [[ "$iwdevmac" == "$iwdevmac_newname" ]] || { echo "Name $newname is already taken by device $iwdevmac_newname"; exit ; }
+
+  # Смена имени
+  echo "Configuring wifi interface..."
+  sudo ip link set $interface down
+  sudo ip link set $interface name $newname
+  sudo ip link set $newname up
+  grepnewname='NAME="'$newname'"'
+  backuping /etc/udev/rules.d/70-persistent-net.rules
+  { sudo cat /etc/udev/rules.d/70-persistent-net.rules 2>/dev/null | grep -v -e "$iwdevmac" -e "$grepnewname" 2>/dev/null; cat #file_1# ; } > /tmp/70-persistent-net.rules.tmp
+  makeconfig /tmp/70-persistent-net.rules.tmp /etc/udev/rules.d/70-persistent-net.rules "s/___iwdevmac___/$iwdevmac/;s/___ivdevname___/$newname/"
+  rm /tmp/70-persistent-net.rules.tmp
+  sudo udevadm control --reload-rules
+  sudo update-initramfs -u
+  
+  echo "Done!"

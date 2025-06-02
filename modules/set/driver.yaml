@@ -37,7 +37,7 @@ mode:
         backuping /etc/udev/rules.d/99-wifi-drivers.rules
         { sudo cat /etc/udev/rules.d/99-wifi-drivers.rules 2>/dev/null | grep -v -e "ATTR{idVendor}==\"$idVendor\".*ATTR{idProduct}==\"$idProduct\"" 2>/dev/null; cat #file_1# ; } > /tmp/99-wifi-drivers.rules.tmp
         makeconfig /tmp/99-wifi-drivers.rules.tmp /etc/udev/rules.d/99-wifi-drivers.rules "s/__idVendor__/$idVendor/;s/__idProduct__/$idProduct/;s/__driver__/$driver/"
-        rm /tmp/70-persistent-net.rules.tmp
+        rm /tmp/99-wifi-drivers.rules.tmp
         sudo udevadm control --reload-rules
         sudo update-initramfs -u
         echo; echo "Don't forget to reboot"
@@ -45,7 +45,7 @@ mode:
         backuping /etc/udev/rules.d/99-wifi-drivers.rules
         sudo cat /etc/udev/rules.d/99-wifi-drivers.rules 2>/dev/null | grep -v -e "ATTR{idVendor}==\"$idVendor\".*ATTR{idProduct}==\"$idProduct\"" 2>/dev/null > /tmp/99-wifi-drivers.rules.tmp
         cat /tmp/99-wifi-drivers.rules.tmp | sudo tee /etc/udev/rules.d/99-wifi-drivers.rules 2>&1 1>/dev/null
-        rm /tmp/70-persistent-net.rules.tmp
+        rm /tmp/99-wifi-drivers.rules.tmp
         sudo udevadm control --reload-rules
         sudo update-initramfs -u
         echo; echo "Don't forget to reboot"

@@ -17,6 +17,7 @@ arguments:
       -
       - 'on'
       - 'off'
+      - 'status'
     description: статус режима мониторинга
 
 mode:
@@ -25,19 +26,22 @@ mode:
   replace:
     monitor:
       'on': |-
+          iw dev $interface info 2>&1 1>/dev/null || { echo "Device $interface not found"; exit ; }
           sudo nmcli dev set $interface managed no
           sudo ip link set $interface down
           sudo iw $interface set monitor control
           sudo ip link set $interface up
       'off': |-
+          iw dev $interface info 2>&1 1>/dev/null || { echo "Device $interface not found"; exit ; }
           sudo ip link set $interface down
           sudo iw $interface set type managed
           sudo ip link set $interface up
           sudo nmcli dev set $interface managed yes
+      'status': ''
+
 
 script: |-
   interface=#interface#
-  iw dev $interface info 2>&1 1>/dev/null || { echo "Device $interface not found"; exit ; }
   #monitor#
   esc=$(printf '\033')
   sudo iw dev | sed "s/type monitor/${esc}[91m&${esc}[0m/;s/type managed/${esc}[92m&${esc}[0m/;s/type AP/${esc}[93m&${esc}[0m/"

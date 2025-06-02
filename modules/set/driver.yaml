@@ -57,7 +57,7 @@ script: |-
   driver=#driver#
   deviceid=#deviceid#
   modprobe -n $driver 2>/dev/null || { echo "Driver $driver not found"; exit ; }
-  sudo lsusb | grep $deviceid || { echo "Device $deviceid not found"; exit ; }
+  { sudo lsusb | grep $deviceid 2>&1 1>/dev/null ; } || { echo "Device $deviceid not found"; exit ; }
   idVendor=$(echo $deviceid | cut -f 1 -d:)
   idProduct=$(echo $deviceid | cut -f 2 -d:)
 

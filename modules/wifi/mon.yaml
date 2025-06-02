@@ -44,4 +44,4 @@ script: |-
   interface=#interface#
   #monitor#
   esc=$(printf '\033')
-  sudo iw dev | sed "s/type monitor/${esc}[91m&${esc}[0m/;s/type managed/${esc}[92m&${esc}[0m/;s/type AP/${esc}[93m&${esc}[0m/"
+  sudo iw dev | sed "s/Interface $interface/${esc}[94m&${esc}[0m/;s/type monitor/${esc}[91m&${esc}[0m/;s/type managed/${esc}[92m&${esc}[0m/;s/type AP/${esc}[93m&${esc}[0m/"

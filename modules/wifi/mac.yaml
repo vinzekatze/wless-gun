@@ -15,6 +15,7 @@ arguments:
       -
     description: задать MAC-адрес (XX:XX:XX:XX:XX:XX)
     regex: '^([0-9A-Fa-f]{2}:){5}[0-9A-Fa-f]{2}$'
+    metavar: MAC
   a:
     default:
       - new
@@ -22,15 +23,15 @@ arguments:
       - original
     description: задать случайный или вернуть оригинальный MAC-адрес
   
-  mode:
-    format:
-      interface: '{!r}'
-      m: '--mac {!r}'
-    replace:
-      a:
-        new: ''
-        random: '--random'
-        original: '--permanent'
+mode:
+  format:
+    interface: '{!r}'
+    m: '--mac {!r}'
+  replace:
+    a:
+      new: ''
+      random: '--random'
+      original: '--permanent'
 
 shell: bash
 

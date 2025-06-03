@@ -1,0 +1,33 @@
+description: Поиск доступных для соединения точек доступа
+author: vinzekatze
+tags:
+  - nmcli
+  - wifi scan
+
+arguments:
+  interface:
+    description: имя интерфейса wlan
+    replacer: '#interface#'
+  g:
+    default:
+      -
+    description: grep -e по результатам (принимает regex-ы)
+    replacer: '#grep#'
+    metavar: REGEX
+    multiple: true
+  
+shell: bash
+
+mode:
+  format:
+    interface: '{!r}'
+    g: '-e {!r}'
+  pformat:
+    g: ' | grep {}'
+
+script: |-
+  sudo nmcli dev wifi list ifname #interface# | cat#grep#
+
+  
+  
+

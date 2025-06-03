@@ -1,0 +1,35 @@
+description: добавляет соединение WPA-PSK
+author: vinzekatze
+tags:
+  - nmcli
+  - add connection
+  - wpa-psk
+
+arguments:
+  n:
+    default: SSID
+    description: имя соединения
+    metavar: NAME
+  interface:
+    description: имя интерфейса wlan
+    replacer: '#interface#'
+  ssid:
+    description: SSID точки доступа
+    replacer: '#ssid#'
+  password:
+    description: пароль точки доступа
+    replacer: '#password#'
+
+mode:
+  format:
+    interface: '{!r}'
+    ssid: '{!r}'
+    password: '{!r}'
+    n: '{!r}'
+  replace:
+    n:
+      SSID: '#ssid#'
+
+shell: bash
+script: |-
+  nmcli connection add type wifi con-name #n# ssid #ssid# ifname #interface# wifi-sec.key-mgmt wpa-psk wifi-sec.psk #password#

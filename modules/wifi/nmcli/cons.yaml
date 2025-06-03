@@ -1,0 +1,42 @@
+description: Просмотр и удаление существующищих соедниений
+author: vinzekatze
+tags:
+  - nmcli
+  - connection operations
+
+arguments:
+  o:
+    description: операция
+    default:
+      - show-all
+      - show
+      - up
+      - down
+      - delete
+    replacer: '#operartion#'
+  name:
+    default:
+      -
+    description: название соединения
+    replacer: '#NAME#'
+    metavar: NAME
+  
+shell: bash
+
+mode:
+  format:
+    name: '{!r}'
+  replace:
+   o:
+    show-all: 'show'
+    show: 'show #NAME#'
+    up: 'up #NAME#'
+    down: 'down #NAME#'
+    delete: 'delete #NAME#'
+
+script: |-
+  sudo nmcli connection #operartion# | cat
+
+  
+  
+

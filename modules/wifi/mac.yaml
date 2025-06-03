@@ -1,5 +1,7 @@
 description: |-
-  Меняет mac адрес
+  Меняет mac адрес с помощью macchanger.
+
+  (мне лень руками перезапускать интерфейсы :D)
 author: vinzekatze
 tags:
   - wifi

@@ -1,8 +1,9 @@
-description: Просмотр и удаление существующищих соедниений
+description: Просмотр, включение, выключение и удаление существующищих соедниений
 author: vinzekatze
 tags:
   - nmcli
   - connection operations
+  - show up down delete
 
 arguments:
   o:

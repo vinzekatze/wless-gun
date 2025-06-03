@@ -23,7 +23,7 @@ mode:
     interface: '{!r}'
     g: '-e {!r}'
   pformat:
-    g: ' | grep {}'
+    g: ' | grep -i {}'
 
 script: |-
   sudo nmcli dev wifi list ifname #interface# | cat#grep#

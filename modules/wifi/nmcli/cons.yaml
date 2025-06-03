@@ -15,8 +15,6 @@ arguments:
       - delete
     replacer: '#operartion#'
   name:
-    default:
-      -
     description: название соединения
     replacer: '#NAME#'
     metavar: NAME

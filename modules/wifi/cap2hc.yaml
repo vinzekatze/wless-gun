@@ -24,7 +24,7 @@ script: >-
   aircrack-ng katzenet5.cap -J './__temp.hash' >/dev/null;
   hcxhash2cap --hccap './__temp.hash.hccap' -c './__temp.cap' >/dev/null;
   hcxpcapngtool '__temp.cap' -o $(basename "$filename" ".${filename##*.}").hc22000 >/dev/null;
-  rm './__temp.hash.hccap' './__temp.cap';
+  rm './__temp.hash.hccap' './__temp.cap' 2>/dev/null;
   hcxhashtool -i $(basename "$filename" ".${filename##*.}").hc22000 --info=stdout;
 
   

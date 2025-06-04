@@ -31,8 +31,8 @@ arguments:
 
 mode:
   format:
-    interface: '--interface {!r}'
-    essid: '--essid {!r}'
+    interface: '{!r}'
+    essid: '{!r}'
     o: '{!r}'
     b: ' --bssid {!r}'
     c: ' --channel {!r}'
@@ -43,5 +43,5 @@ mode:
 shell: bash
 
 script: >-
-  sudo eaphammer #interface# #essid# --auth wpa-psk --password 00000000 --psk-capture-file "$(realpath #output#)"#bssid##channel#
+  sudo eaphammer --interface #interface# --essid #essid# --auth wpa-psk --password 00000000 --psk-capture-file "$(realpath #output#)"#bssid##channel#
   

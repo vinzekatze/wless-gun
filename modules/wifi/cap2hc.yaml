@@ -1,0 +1,30 @@
+description: |- 
+  Вытаскивает хендшейки их cap в понятный современному hashcat формат для режима 22000
+
+  Сохранит hc22000 в директории запуска!!!
+
+tags:
+  - cap to hc22000
+  - fix for hashcat
+
+arguments:
+  input:
+    description: файлы формата .cap
+    replacer: '#filename#'
+    multiple: true
+
+mode:
+  format:
+    input: '{!r}'
+  loop: input
+
+shell: bash
+script: >-
+  filename=#file#;
+  aircrack-ng katzenet5.cap -J './__temp.hash' >/dev/null;
+  hcxhash2cap --hccap '__temp.hash' -c '__temp.cap' >/dev/null;
+  hcxpcapngtool '__temp.cap' -o $(basename "$filename" ".${filename##*.}").hc22000 >/dev/null;
+  rm './__temp.hash' './__temp.cap';
+  ls $(basename "$filename" ".${filename##*.}").hc22000;
+
+  

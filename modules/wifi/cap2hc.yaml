@@ -25,6 +25,6 @@ script: >-
   hcxhash2cap --hccap './__temp.hash.hccap' -c './__temp.cap' >/dev/null;
   hcxpcapngtool '__temp.cap' -o $(basename "$filename" ".${filename##*.}").hc22000 >/dev/null;
   rm './__temp.hash.hccap' './__temp.cap';
-  ls $(basename "$filename" ".${filename##*.}").hc22000;
+  hcxhashtool -i $(basename "$filename" ".${filename##*.}").hc22000 --info=stdout;
 
   

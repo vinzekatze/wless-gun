@@ -11,16 +11,19 @@ arguments:
       -
     regex: '^([0-9A-Fa-f]{2}:){5}[0-9A-Fa-f]{2}$'
     replacer: '#bssid#'
+    metavar: BSSID
   c:
     description: канал создаваемой точки доступа
     default:
       -
     regex: '[0-9]+'
     replacer: '#channel#'
+    metavar: CHANNEL
   o:
     description: выходной .cap файл с хендшейками
     default: '[ESSID]'
     replacer: '#output#'
+    metavar: FILE
   interface:
     description: имя интерфейса wlan
   essid:

@@ -14,6 +14,7 @@ arguments:
     description: выходной файл с хешами 
     replacer: '#output#'
     default: 'hashes.hc22000'
+    metavar: FILE
 
 mode:
   format:

@@ -43,5 +43,5 @@ mode:
 shell: bash
 
 script: >-
-  sudo eaphammer --interface #interface# --essid #essid# --auth wpa-psk --password 00000000 --psk-capture-file "$(realpath #output#)"#bssid##channel#
+  sudo eaphammer --interface #interface# --essid #essid# --auth wpa-psk --password 00000000 --creds --psk-capture-file "$(realpath #output#)"#bssid##channel#
   

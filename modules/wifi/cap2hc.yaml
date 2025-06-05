@@ -24,12 +24,13 @@ mode:
 
 shell: bash
 script: >-
-  for bssid in $(echo 0 | aircrack-ng ./*.cap | grep -e 'WPA ([1-9][0-9]* handshake)' | awk '{print $2}');
+  for bssid in $(echo 0 | aircrack-ng #filename# | grep -e 'WPA ([1-9][0-9]* handshake)' | awk '{print $2}');
   do aircrack-ng #filename# -q -b $bssid -J './__temp.hash' >/dev/null;
   hcxhash2cap --hccap './__temp.hash.hccap' -c './__temp.cap' >/dev/null;
   hcxpcapngtool '__temp.cap' -o #output# 1>/dev/null;
   rm './__temp.hash.hccap' './__temp.cap' 2>/dev/null;
   done;
+  sort -u #output# -o #output#;
   hcxhashtool -i #output# --info=stdout;
 
   

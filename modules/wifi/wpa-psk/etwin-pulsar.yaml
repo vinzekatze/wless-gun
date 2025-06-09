@@ -27,7 +27,7 @@ mode:
   format:
     interface: '{!r}'
     list: '{!r}'
-    t: '{!r}'
+    t: '{}s'
 
 shell: bash
 

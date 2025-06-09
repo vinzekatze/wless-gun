@@ -32,7 +32,7 @@ mode:
 shell: bash
 
 script: >-
-  $interface=#interface#;
+  interface=#interface#;
   outdir=#dir#;
   mkdir -p $outdir;
   while true; do

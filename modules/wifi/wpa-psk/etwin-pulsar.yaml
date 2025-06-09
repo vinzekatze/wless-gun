@@ -1,4 +1,7 @@
-description: Поднимает поддельные точки доступа по таймауту
+description: |- 
+  Поднимает поддельные точки доступа по таймауту
+
+  ВНИМАНИЕ! Любое внешнее логирование судя по всему ломает eaphammer - и встроенные функции bshm, и tee... Мистика!
 tags:
   - wpa-psk
   - evil twin
@@ -36,7 +39,7 @@ script: >-
   outdir=#dir#;
   mkdir -p $outdir;
   while true; do
-  for ap in $(cat #list# | sort -u); do
+  for ap in $(cat #list# | sort -u | sort -R); do
   sudo ip link set $interface down;
   sudo iw $interface set type managed;
   sudo ip link set $interface up;

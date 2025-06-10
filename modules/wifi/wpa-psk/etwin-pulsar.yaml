@@ -48,7 +48,7 @@ script: |-
   iw dev $interface info 2>&1 1>/dev/null || { echo "Device $interface not found"; exit ; };
   iw dev $monitor info 2>&1 1>/dev/null || { echo "Device $monitor not found"; exit ; };
   filenotfound=false;
-  for file in #list#; do test -e $file || { filenotfound=true; echo -e "\e[1;91m[error] File $file not exist\e[0m"; };
+  for file in #list#; do test -e $file || { filenotfound=true; echo -e "\e[1;91m[error] File $file not exist\e[0m"; }; done;
   if $filenotfound; then exit; fi
 
   # Функции

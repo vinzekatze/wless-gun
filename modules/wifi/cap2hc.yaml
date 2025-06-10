@@ -23,6 +23,7 @@ mode:
 
 shell: bash
 script: >-
+  hcxpcapngtool #filename# -o #output# 1>/dev/null;
   for file in #filename#; do
   for bssid in $(echo 0 | aircrack-ng $file | grep -e 'WPA ([1-9][0-9]* handshake)' -e 'with PMKID' | awk '{print $2}');
   do aircrack-ng $file -q -b $bssid -J './__temp.hash' >/dev/null;

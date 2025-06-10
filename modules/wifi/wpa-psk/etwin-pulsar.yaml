@@ -59,12 +59,12 @@ script: |-
       essid=$(echo $ap | awk -F ';' '{print $1}');
       bssid=$(echo $ap | awk -F ';' '{print $2}');
       channel=$(echo $ap | awk -F ';' '{print $3}');
-      suffix=$(echo $bssid; sed "s:[^[:alnum:]_./а-яА-Я]\+:_:g");
+      suffix=$(echo $essid | sed "s:[^[:alnum:]_./а-яА-Я]\+:_:g");
       aphsfile=$(realpath $outdir/apdump-${suffix}-$(date +%Y%m%d%H%M%S).cap);
       monhsfile=$(realpath $outdir/mondump-${suffix}-$(date +%Y%m%d%H%M%S));
 
       # Мониторинг
-      # sudo screen -XS pulsar-monitor-proc quit >/dev/null;
+      sudo screen -XS pulsar-monitor-proc quit >/dev/null;
       sudo nmcli dev set $monitor managed no;
       sudo ip link set $monitor down;
       sudo iw $monitor set monitor control;
@@ -83,7 +83,7 @@ script: |-
       trap exit_func SIGINT;
       echo; echo "Press CTRL+C to exit";
       for i in 5 4 3 2 1; do echo -n "$i... "; sleep 1; done; 
-      # sudo screen -XS pulsar-monitor-proc quit >/dev/null;
+      sudo screen -XS pulsar-monitor-proc quit >/dev/null;
       echo; 
     done;
   done

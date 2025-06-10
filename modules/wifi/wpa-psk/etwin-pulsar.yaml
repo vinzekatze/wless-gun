@@ -62,6 +62,9 @@ script: |-
       suffix=$(echo $essid | sed "s:[^[:alnum:]_./а-яА-Я]\+:_:g");
       aphsfile=$(realpath $outdir/apdump-${suffix}-$(date +%Y%m%d%H%M%S).cap);
       monhsfile=$(realpath $outdir/mondump-${suffix}-$(date +%Y%m%d%H%M%S));
+      echo -e "\e[1;93m[target] ESSID: \e[0m$essid";
+      echo -e "\e[1;93m[target] BSSID: \e[0m$bssid";
+      echo -e "\e[1;93m[target] CH:    \e[0m$channel";
 
       # Мониторинг
       echo -e "\e[1;92m[$monitor] Starting capture... \e[0m";
@@ -73,7 +76,7 @@ script: |-
       sudo screen -dmS pulsar-monitor-proc airodump-ng $monitor -c $channel --bssid $bssid --write $monhsfile --output-format pcap;
 
       # Точка доступа
-      echo -e "\e[1;92m[$monitor] Starting access point... \e[0m";
+      echo -e "\e[1;92m[$interface] Starting access point... \e[0m";
       sudo ip link set $interface down;
       sudo iw $interface set type managed;
       sudo ip link set $interface up;

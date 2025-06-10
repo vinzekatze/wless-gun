@@ -47,7 +47,10 @@ script: |-
   # Проверки
   iw dev $interface info 2>&1 1>/dev/null || { echo "Device $interface not found"; exit ; };
   iw dev $monitor info 2>&1 1>/dev/null || { echo "Device $monitor not found"; exit ; };
-  
+  filenotfound=false;
+  for file in #list#; do test -e $file || { filenotfound=true; echo -e "\e[1;91m[error] File $file not exist\e[0m"; };
+  if $filenotfound; then exit; fi
+
   # Функции
   stop_mon_screen() { sudo screen -S pulsar-monitor-proc -X stuff '^C'; };
   exit_func() { stop_mon_screen; exit; };

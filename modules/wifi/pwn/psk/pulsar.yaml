@@ -43,14 +43,15 @@ script: |-
   interface=#ap-wlan#;
   monitor=#mon-wlan#;
   outdir=#dir#;
-  
+  OLDIFS=$IFS;
+
   # Проверки
   iw dev $interface info 2>&1 1>/dev/null || { echo "Device $interface not found"; exit ; };
   iw dev $monitor info 2>&1 1>/dev/null || { echo "Device $monitor not found"; exit ; };
   filenotfound=false;
   for file in #list#; do test -e $file || { filenotfound=true; echo -e "\e[1;91m[error] File $file not exist\e[0m"; }; done;
   if $filenotfound; then exit; fi;
-  cat #list# | sort -u | sort -R > temp.etwin-targets.txt;
+  # cat #list# | sort -u | sort -R > temp.etwin-targets.txt;
 
   # Функции
   stop_mon_screen() { sudo screen -S pulsar-monitor-proc -X stuff '^C'; };
@@ -58,7 +59,8 @@ script: |-
 
   mkdir -p $outdir;
   while true; do
-    cat temp.etwin-targets.txt | while IFS= read -r ap; do
+    IFS=$'\n';
+    for ap in $(cat #list# | sort -u | sort -R); do
       # Параметры
       essid=$(echo $ap | awk -F ';' '{print $1}');
       bssid=$(echo $ap | awk -F ';' '{print $2}');
@@ -92,10 +94,13 @@ script: |-
       trap exit_func SIGINT;
       echo; 
       echo -e "\e[1;91m[pause] Press CTRL+C to exit\e[0m";
+      IFS=$OLDIFS;
       for i in 5 4 3 2 1; do echo -n "$i... "; sleep 1; done; 
+      IFS=$'\n';
       sudo screen -XS pulsar-monitor-proc quit >/dev/null;
-      echo; 
+      echo;
     done;
+    IFS=$OLDIFS;
   done;
-  rm -f ./temp.etwin-targets.txt
+  # rm -f ./temp.etwin-targets.txt
   

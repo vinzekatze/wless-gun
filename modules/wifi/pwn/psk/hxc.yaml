@@ -1,0 +1,73 @@
+description: |-
+  Запускает hxcdumptool в режиме атаки по белому списку без лишних заморочек
+  Сохранит pcapng файлы в текущую директорию
+  
+  Каналы 2.4ГГц:
+  1a,2a,3a,4a,5a,6a,7a,8a,9a,10a,11a,12a,13a,14a
+  
+  Каналы 5ГГц:
+  15b,16b,17b,18b,20b,24b,28b,32b,36b,40b,44b,48b,52b,56b,60b,64b,68b,72b,76b,80b,84b,88b,92b,96b,100b,104b,108b,112b,116b,120b,124b,128b,132b,136b,140b,144b,149b,153b,157b,161b,165b,169b,173b,177b
+
+  Посмотреть информацию о каналах, доступых интерфейсу:
+  hcxdumptool -I <wlan>
+author: vinzekatze
+
+arguments:
+  i:
+    description: имя интерфейса
+    metavar: INTERFACE
+  b:
+    default:
+      -
+    description: BSSID точек для атаки
+    multiple: true
+    regex: '^([0-9A-Fa-f]{2}[:-]){5}([0-9A-Fa-f]{2})$|^[0-9A-Fa-f]{12}$'
+    metavar: BSSID
+    replacer: '#bssid#'
+  f:
+    default:
+      -
+    description: Файлы с BSSID точек доступа для атаки
+    multiple: true
+    regex: '^([0-9A-Fa-f]{2}[:-]){5}([0-9A-Fa-f]{2})$|^[0-9A-Fa-f]{12}$'
+    metavar: FILE
+    replacer: '#bssid-file#'
+  c:
+    description: >-
+      каналы атакуемых точек доступа (формат: 1a,12a,40b)
+    metavar: CHANNEL
+  t:
+    default: 5
+    description: время прослушивания одного канала в секундах
+    regex: '\d+'
+    metavar: SEC
+
+shell: bash
+mode:
+  readfile:
+    - f
+  format:
+    b: >-
+      wlan addr3 {}
+    f: >-
+      wlan addr3 {}
+    i: '{!r}'
+    c: '{!r}'
+  join:
+    b: ' or '
+    f: ' or '
+  pformat:
+    b: '{!r}'
+    f: '{!r}'
+
+
+script: >-
+  targs1=#bssid#;
+  targs2=#bssid-file#;
+  if [[ -n "$targs1" &&  -n "$targs2" ]]; then
+  hcxdumptool --bpfc="$targs1 or $targs2" > temp.targets-filter.bpf;
+  else
+  hcxdumptool --bpfc="$targs1$targs2" > temp.targets-filter.bpf;
+  fi;
+  sudo hcxdumptool -i #i# --rds=3 --bpf=temp.targets-filter.bpf -c #c# -t #t#;
+  rm -f ./temp.targets-filter.bpf

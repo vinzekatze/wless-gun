@@ -1,0 +1,27 @@
+description: |-
+  Базовая команда для сбора данных с помощью airodump-ng
+  
+  Сохранит pcap и csv в директорию запуска
+author: vinzekatze
+tags:
+  - airodump-ng
+
+arguments:
+  interface:
+    description: имя интерфейса
+  o:
+    default: recon
+    description: префикс выходных файлов
+
+mode:
+  format:
+    interface: '{!r}'
+    o: '{!r}'
+
+shell: bash
+script: >-
+  sudo nmcli dev set #interface# managed no;
+  sudo ip link set #interface# down;
+  sudo iw #interface# set monitor control;
+  sudo ip link set #interface# up;
+  sudo airodump-ng #interface# --output-format pcap,csv --band abg --write #o# --wps

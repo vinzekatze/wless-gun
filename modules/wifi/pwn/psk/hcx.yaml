@@ -19,7 +19,7 @@ arguments:
   b:
     default:
       -
-    description: BSSID точек для атаки
+    description: BSSID точек доступа для атаки
     multiple: true
     regex: '^([0-9A-Fa-f]{2}[:-]){5}([0-9A-Fa-f]{2})$|^[0-9A-Fa-f]{12}$'
     metavar: BSSID
@@ -60,14 +60,19 @@ mode:
     b: '{!r}'
     f: '{!r}'
 
-
 script: >-
   targs1=#bssid#;
   targs2=#bssid-file#;
+  interface=#i#;
+  iw dev $interface info 2>&1 1>/dev/null || { echo "Device $interface not found"; exit ; };
+  sudo ip link set $interface down;
+  sudo iw $interface set type managed;
+  sudo ip link set $interface up;
+  sudo nmcli dev set $interface managed yes; sleep 1;
   if [[ -n "$targs1" &&  -n "$targs2" ]]; then
   hcxdumptool --bpfc="$targs1 or $targs2" > temp.targets-filter.bpf;
   else
   hcxdumptool --bpfc="$targs1$targs2" > temp.targets-filter.bpf;
   fi;
-  sudo hcxdumptool -i #i# --rds=3 --bpf=temp.targets-filter.bpf -c #c# -t #t#;
+  sudo hcxdumptool -i $interface --rds=3 --bpf=temp.targets-filter.bpf -c #c# -t #t#;
   rm -f ./temp.targets-filter.bpf

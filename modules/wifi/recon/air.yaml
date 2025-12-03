@@ -9,6 +9,10 @@ tags:
 arguments:
   interface:
     description: имя интерфейса
+  c:
+    default:
+      -
+    description: номера каналов для прослушивания через запятую
   o:
     default: recon
     description: префикс выходных файлов
@@ -17,11 +21,14 @@ mode:
   format:
     interface: '{!r}'
     o: '{!r}'
+    c: '--channel {!r}'
 
 shell: bash
 script: >-
-  sudo nmcli dev set #interface# managed no;
-  sudo ip link set #interface# down;
-  sudo iw #interface# set monitor control;
-  sudo ip link set #interface# up;
-  sudo airodump-ng #interface# --output-format pcap,csv --band abg --write #o# --wps
+  interface=#interface#;
+  iw dev $interface info 2>&1 1>/dev/null || { echo "Device $interface not found"; exit ; };
+  sudo nmcli dev set $interface managed no; sleep 1;
+  sudo ip link set $interface down;
+  sudo iw $interface set monitor control;
+  sudo ip link set $interface up;
+  sudo airodump-ng $interface --output-format pcap,csv #c# --band abg --write #o# --wps; 

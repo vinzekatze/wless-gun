@@ -1,5 +1,5 @@
 description: |- 
-  Вытаскивает хендшейки их cap в понятный современному hashcat формат для режима 22000
+  Вытаскивает хендшейки из .cap и .pcapng файлов в понятном современному hashcat формате (режим 22000)
 
 tags:
   - cap to hc22000
@@ -7,7 +7,7 @@ tags:
 
 arguments:
   input:
-    description: входные файлы формата .cap
+    description: входные файлы формата .cap и .pcapng
     replacer: '#filename#'
     multiple: true
   o:

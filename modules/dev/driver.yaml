@@ -1,5 +1,6 @@
 description: |-
   Управляет драйверами устройств.
+  (Кажись, не работает!)
 
   Конфиг: /etc/udev/rules.d/99-wifi-drivers.rules
 author: vinzekatze

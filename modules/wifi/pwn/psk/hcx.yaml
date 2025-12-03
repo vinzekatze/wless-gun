@@ -24,7 +24,7 @@ arguments:
     regex: '^([0-9A-Fa-f]{2}[:-]){5}([0-9A-Fa-f]{2})$|^[0-9A-Fa-f]{12}$'
     metavar: BSSID
     replacer: '#bssid#'
-  f:
+  bf:
     default:
       -
     description: Файлы с BSSID точек доступа для атаки
@@ -45,20 +45,20 @@ arguments:
 shell: bash
 mode:
   readfile:
-    - f
+    - bf
   format:
     b: >-
       wlan addr3 {}
-    f: >-
+    bf: >-
       wlan addr3 {}
     i: '{!r}'
     c: '{!r}'
   join:
     b: ' or '
-    f: ' or '
+    bf: ' or '
   pformat:
     b: '{!r}'
-    f: '{!r}'
+    bf: '{!r}'
 
 script: >-
   targs1=#bssid#;

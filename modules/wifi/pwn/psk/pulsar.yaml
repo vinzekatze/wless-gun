@@ -82,6 +82,7 @@ script: |-
 
       # Точка доступа
       echo -e "\e[1;92m[$interface] Starting access point... \e[0m";
+      sudo nmcli dev set $interface managed no; sleep 1;
       sudo ip link set $interface down;
       sudo iw $interface set type managed; 
       sudo ip link set $interface up;

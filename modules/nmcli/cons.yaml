@@ -1,4 +1,5 @@
-description: Просмотр, включение, выключение и удаление существующищих соедниений
+description: |-
+  Некоторые базовые операции для nmcli
 author: vinzekatze
 tags:
   - nmcli
@@ -6,35 +7,55 @@ tags:
   - show up down delete
 
 arguments:
-  o:
+  operation:
     description: операция
     default:
-      - show-all
+      -
       - show
       - up
       - down
       - delete
+      - rename
     replacer: '#operartion#'
-  name:
+  n:
+    default:
+      -
     description: название соединения
     replacer: '#NAME#'
     metavar: NAME
+  nn:
+    default:
+      -
+    description: новое название соединения (для операции rename)
+    replacer: '#NEWNAME#'
+    metavar: NEW-NAME
+  g:
+    default:
+      -
+    description: grep -e по результатам (принимает regex-ы)
+    replacer: '#grep#'
+    metavar: REGEX
+    multiple: true
   
 shell: bash
 
 mode:
   format:
-    name: '{!r}'
+    n: '{!r}'
+    nn: '{!r}'
+    g: '-e {!r}'
+  pformat:
+    g: ' | grep -i {}'
   replace:
-   o:
-    show-all: 'show'
+   operation:
     show: 'show #NAME#'
     up: 'up #NAME#'
     down: 'down #NAME#'
     delete: 'delete #NAME#'
+    rename: 'modify #NAME# connection.id #NEWNAME#'
 
 script: |-
-  sudo nmcli connection #operartion# | cat
+  sudo nmcli connection #operartion# | cat#grep#
 
   
   

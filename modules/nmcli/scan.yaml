@@ -1,4 +1,4 @@
-description: Поиск доступных для соединения точек доступа
+description: Поиск доступных для соединения точек доступа с помощью nmcli
 author: vinzekatze
 tags:
   - nmcli
@@ -26,7 +26,13 @@ mode:
     g: ' | grep -i {}'
 
 script: |-
-  sudo nmcli dev wifi list ifname #interface# | cat#grep#
+  interface=#interface#;
+  iw dev $interface info 2>&1 1>/dev/null || { echo "Device $interface not found"; exit ; };
+  sudo ip link set $interface down;
+  sudo iw $interface set type managed;
+  sudo ip link set $interface up;
+  sudo nmcli dev set $interface managed yes; sleep 1;
+  sudo nmcli dev wifi list ifname $interface --rescan yes | cat#grep#
 
   
   

@@ -31,7 +31,7 @@ arguments:
     description: фильтровать точки доступа по ESSID
     multiple: true
     metavar: ESSID
-    replacer: '#BSSID#'
+    replacer: '#ESSID#'
 
 mode:
   format:
@@ -49,4 +49,4 @@ script: >-
   sudo ip link set $interface down;
   sudo iw $interface set monitor control;
   sudo ip link set $interface up;
-  sudo airodump-ng $interface --output-format pcap,csv #c# --band abg --write #o# --wps #BSSID# #BSSID#; 
+  sudo airodump-ng $interface --output-format pcap,csv #c# --band abg --write #o# --wps #BSSID# #ESSID#; 

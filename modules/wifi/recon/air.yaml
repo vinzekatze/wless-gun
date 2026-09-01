@@ -7,8 +7,10 @@ tags:
   - airodump-ng
 
 arguments:
-  interface:
+  i:
     description: имя интерфейса
+    raplacer: '#interface#'
+    metavar: INTERFACE
   c:
     default:
       -
@@ -35,7 +37,7 @@ arguments:
 
 mode:
   format:
-    interface: '{!r}'
+    i: '{!r}'
     o: '{!r}'
     c: '--channel {!r}'
     b: '--bssid {!r}'

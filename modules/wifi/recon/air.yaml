@@ -9,7 +9,7 @@ tags:
 arguments:
   i:
     description: имя интерфейса
-    raplacer: '#interface#'
+    replacer: '#interface#'
     metavar: INTERFACE
   c:
     default:

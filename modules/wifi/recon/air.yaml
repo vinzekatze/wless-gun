@@ -41,7 +41,7 @@ mode:
     o: '{!r}'
     c: '--channel {!r}'
     b: '--bssid {!r}'
-    e: '--essid {!r}'
+    e: '--essid-regex {!r}'
 
 shell: bash
 script: >-

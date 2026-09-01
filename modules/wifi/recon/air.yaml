@@ -7,10 +7,9 @@ tags:
   - airodump-ng
 
 arguments:
-  i:
+  interface:
     description: имя интерфейса
     replacer: '#interface#'
-    metavar: INTERFACE
   c:
     default:
       -
@@ -27,21 +26,13 @@ arguments:
     multiple: true
     metavar: BSSID
     replacer: '#BSSID#'
-  e:
-    default:
-      -
-    description: фильтровать точки доступа по ESSID
-    multiple: true
-    metavar: ESSID
-    replacer: '#ESSID#'
 
 mode:
   format:
-    i: '{!r}'
+    interface: '{!r}'
     o: '{!r}'
     c: '--channel {!r}'
     b: '--bssid {!r}'
-    e: '--essid-regex {!r}'
 
 shell: bash
 script: >-
@@ -51,4 +42,4 @@ script: >-
   sudo ip link set $interface down;
   sudo iw $interface set monitor control;
   sudo ip link set $interface up;
-  sudo airodump-ng $interface --output-format pcap,csv #c# --band abg --write #o# --wps #BSSID# #ESSID#; 
+  sudo airodump-ng $interface --output-format pcap,csv #c# --band abg --write #o# --wps #BSSID#; 

@@ -13,15 +13,33 @@ arguments:
     default:
       -
     description: номера каналов для прослушивания через запятую
+    metavar: CHANNEL
   o:
     default: recon
     description: префикс выходных файлов
+    metavar: FILE
+  b:
+    default:
+      -
+    description: фильтровать точки доступа по BSSID
+    multiple: true
+    metavar: BSSID
+    replacer: '#BSSID#'
+  e:
+    default:
+      -
+    description: фильтровать точки доступа по ESSID
+    multiple: true
+    metavar: ESSID
+    replacer: '#BSSID#'
 
 mode:
   format:
     interface: '{!r}'
     o: '{!r}'
     c: '--channel {!r}'
+    b: '--bssid {!r}'
+    e: '--essid {!r}'
 
 shell: bash
 script: >-
@@ -31,4 +49,4 @@ script: >-
   sudo ip link set $interface down;
   sudo iw $interface set monitor control;
   sudo ip link set $interface up;
-  sudo airodump-ng $interface --output-format pcap,csv #c# --band abg --write #o# --wps; 
+  sudo airodump-ng $interface --output-format pcap,csv #c# --band abg --write #o# --wps #BSSID# #BSSID#; 

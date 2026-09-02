@@ -55,7 +55,16 @@ item_1:
     sort | uniq | grep --color=never -v ',,,,,' | #GREP-IN# #GREP-EX#
     awk -F ',' 'BEGIN { print "ESSID,BSSID,CHANNEL,PRIVACY,CIPHER,AUTH" } {print}' | tabulate -s',' -1
 
-item_2:
+item_1:
+  description: Показать таблицу с точками доступа (с мощностью)
+  script: >-
+    for file in #FILE#;
+    do cat $file | awk '/BSSID, First time seen, Last time seen, channel, Speed/{flag=1; next} /Station MAC, First time seen, Last time seen, Power/{flag=0} flag'; done |
+    awk -F '[ ]*,[ ]*' '{print $14 "," $1 "," $4 "," $9 "," $6 "," $7 "," $8}' |
+    sort | uniq | grep --color=never -v ',,,,,' | #GREP-IN# #GREP-EX#
+    awk -F ',' 'BEGIN { print "ESSID,BSSID,CHANNEL,POWER,PRIVACY,CIPHER,AUTH" } {print}' | tabulate -s',' -1
+
+item_3:
   description: Вывести только BSSID-ы
   script: >-
     for file in #FILE#;
@@ -64,7 +73,7 @@ item_2:
     sort | uniq | grep --color=never -v ',,,,,' | #GREP-IN# #GREP-EX#
     awk -F ',' '{print $2}' | sort | uniq | grep --color=never -v '^$' #DELIM#
 
-item_3:
+item_4:
   description: Вывести только каналы
   script: >-
     for file in #FILE#;
@@ -73,7 +82,7 @@ item_3:
     sort | uniq | grep --color=never -v ',,,,,' | #GREP-IN# #GREP-EX# 
     awk -F ',' '{print $3}' | sort --human-numeric-sort | uniq | grep --color=never -v '^$' #DELIM#
 
-item_4:
+item_5:
   description: Вывести список каналов в формате hcxdumptool (Осторожно, топорно! Но в обычных ситуациях должно работать)
   script: >-
     for file in #FILE#;
@@ -84,7 +93,7 @@ item_4:
     if [[ "$chn" -le "14" ]]; then echo ${chn}a; elif [[ -n "$chn" ]] then echo ${chn}b; fi; done |
     awk -v d=',' '{{s=(NR==1?s:s d)$0}}END{{print s}}'
 
-item_5:
+item_6:
   description: Получить список для скрипта etwin pulsar
   script: >-
     for file in #FILE#;
@@ -93,7 +102,7 @@ item_5:
     sort | uniq | grep --color=never -v ',,,,,' | #GREP-IN# #GREP-EX# 
     awk -F ',' '{print $1 ";" $2 ";" $3}' | grep --color=never -P '^.*?;.+;\d+$'
 
-item_6:
+item_7:
   description: Показать таблицу с клиентами
   script: >-
     for file in #FILE#;
@@ -102,7 +111,7 @@ item_6:
     sort | uniq | grep --color=never -v ',,' | #GREP-IN# #GREP-EX#
     awk -F ',' 'BEGIN { print "Station MAC,BSSID,Probed ESSIDs" } {print}' | tabulate -s',' -1
 
-item_7:
+item_8:
   description: Вывести MAC-адреса клиентов
   script: >-
     for file in #FILE#;

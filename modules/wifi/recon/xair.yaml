@@ -61,7 +61,7 @@ item_2:
     for file in #FILE#;
     do cat $file | awk '/BSSID, First time seen, Last time seen, channel, Speed/{flag=1; next} /Station MAC, First time seen, Last time seen, Power/{flag=0} flag'; done |
     awk -F '[ ]*,[ ]*' '{print $9 "," $14 "," $1 "," $4 "," $6 "," $7 "," $8}' |
-    sort | uniq | grep --color=never -v ',,,,,' | #GREP-IN# #GREP-EX#
+    sort --human-numeric-sort | uniq | grep --color=never -v ',,,,,' | #GREP-IN# #GREP-EX#
     awk -F ',' 'BEGIN { print "POWER,ESSID,BSSID,CHANNEL,PRIVACY,CIPHER,AUTH" } {print}' | tabulate -s',' -1
 
 item_3:

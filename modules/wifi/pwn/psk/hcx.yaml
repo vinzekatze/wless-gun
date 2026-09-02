@@ -41,6 +41,18 @@ arguments:
     description: время прослушивания одного канала в секундах
     regex: '\d+'
     metavar: SEC
+  silent:
+    default:
+      -
+      - '--silent'
+    description: пассивный режим
+    replacer: '#SILENT#'
+  rssi:
+    default:
+      -
+    description: ограничение атак по мощности сигнала (оптимальный диапазон для поиска близких целей от -40 до -65)
+    regex: '-\d+'
+    replacer: '#RSSI#'
   black-list:
     default:
       -
@@ -59,6 +71,7 @@ mode:
       wlan addr3 {}
     i: '{!r}'
     c: '{!r}'
+    rssi: '--rssi={!r}'
   join:
     b: ' or '
     bf: ' or '
@@ -81,5 +94,5 @@ script: >-
   else
   hcxdumptool --bpfc="#BLACKLIST-MODE#($targs1$targs2)" > temp.targets-filter.bpf;
   fi;
-  sudo hcxdumptool -i $interface --rds=3 --bpf=temp.targets-filter.bpf -c #c# -t #t#;
+  sudo hcxdumptool -i $interface #SILENT# --enable_status=1 #RSSI# --rds=3 --bpf=temp.targets-filter.bpf -c #c# -t #t#;
   rm -f ./temp.targets-filter.bpf

@@ -41,6 +41,12 @@ arguments:
     description: время прослушивания одного канала в секундах
     regex: '\d+'
     metavar: SEC
+  black-list:
+    default:
+      -
+      - 'not '
+    replacer: '#BLACKLIST-MODE#'
+    description: режим черного списка BSSID - будет атаковать все, кроме указанных
 
 shell: bash
 mode:
@@ -71,9 +77,9 @@ script: >-
   sudo ip link set $interface up;
   sudo nmcli dev set $interface managed yes; sleep 1;
   if [[ -n "$targs1" &&  -n "$targs2" ]]; then
-  hcxdumptool --bpfc="$targs1 or $targs2" > temp.targets-filter.bpf;
+  hcxdumptool --bpfc="#BLACKLIST-MODE#($targs1 or $targs2)" > temp.targets-filter.bpf;
   else
-  hcxdumptool --bpfc="$targs1$targs2" > temp.targets-filter.bpf;
+  hcxdumptool --bpfc="#BLACKLIST-MODE#($targs1$targs2)" > temp.targets-filter.bpf;
   fi;
   sudo hcxdumptool -i $interface --rds=3 --bpf=temp.targets-filter.bpf -c #c# -t #t#;
   rm -f ./temp.targets-filter.bpf

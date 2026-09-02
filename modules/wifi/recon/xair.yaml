@@ -55,7 +55,7 @@ item_1:
     sort | uniq | grep --color=never -v ',,,,,' | #GREP-IN# #GREP-EX#
     awk -F ',' 'BEGIN { print "ESSID,BSSID,CHANNEL,PRIVACY,CIPHER,AUTH" } {print}' | tabulate -s',' -1
 
-item_1:
+item_2:
   description: Показать таблицу с точками доступа (с мощностью)
   script: >-
     for file in #FILE#;

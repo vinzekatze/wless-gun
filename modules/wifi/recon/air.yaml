@@ -26,6 +26,13 @@ arguments:
     multiple: true
     metavar: BSSID
     replacer: '#BSSID#'
+  p:
+    default:
+      -
+    description: фильтровать по минимальной мощности сигнала
+    metavar: POWER
+    replacer: '#POWER#'
+    regex: '-\d+'
 
 mode:
   format:
@@ -33,6 +40,7 @@ mode:
     o: '{!r}'
     c: '--channel {!r}'
     b: '--bssid {!r}'
+    p: '--min-power {!r}'
 
 shell: bash
 script: >-
@@ -42,4 +50,4 @@ script: >-
   sudo ip link set $interface down;
   sudo iw $interface set monitor control;
   sudo ip link set $interface up;
-  sudo airodump-ng $interface --output-format pcap,csv #c# --band abg --write #o# --wps #BSSID#; 
+  sudo airodump-ng $interface --output-format pcap,csv #c# --band abg --write #o# --wps #BSSID# #POWER#; 

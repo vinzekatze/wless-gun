@@ -17,30 +17,17 @@ arguments:
     description: имя интерфейса
     metavar: INTERFACE
   b:
-    default:
-      -
-    description: BSSID точек доступа для атаки
+    description: BSSID точек доступа для атаки (может принимать файлы со списками)
     multiple: true
     regex: '^([0-9A-Fa-f]{2}[:-]){5}([0-9A-Fa-f]{2})$|^[0-9A-Fa-f]{12}$'
     metavar: BSSID
     replacer: '#bssid#'
-  bf:
-    default:
-      -
-    description: Файлы с BSSID точек доступа для атаки
-    multiple: true
-    regex: '^([0-9A-Fa-f]{2}[:-]){5}([0-9A-Fa-f]{2})$|^[0-9A-Fa-f]{12}$'
-    metavar: FILE
-    replacer: '#bssid-file#'
   c:
     description: >-
-      каналы атакуемых точек доступа (формат: 1a,12a,40b)
+      каналы атакуемых точек доступа (может принимать файлы со списками, понимает форматы "1" и "1a")
     metavar: CHANNEL
-  t:
-    default: 5
-    description: время прослушивания одного канала в секундах
-    regex: '\d+'
-    metavar: SEC
+    multiple: true
+    regex: '\d+[abcde]?'
   black-list:
     default:
       -
@@ -51,35 +38,35 @@ arguments:
 shell: bash
 mode:
   readfile:
-    - bf
+    - b
+    - c
   format:
     b: >-
-      wlan addr3 {}
-    bf: >-
       wlan addr3 {}
     i: '{!r}'
     c: '{!r}'
   join:
     b: ' or '
-    bf: ' or '
   pformat:
     b: '{!r}'
-    bf: '{!r}'
 
 script: >-
   targs1=#bssid#;
-  targs2=#bssid-file#;
   interface=#i#;
+  channels="";
   iw dev $interface info 2>&1 1>/dev/null || { echo "Device $interface not found"; exit ; };
   sudo nmcli dev set $interface managed no; sleep 1;
   sudo ip link set $interface down;
   sudo iw $interface set type managed;
   sudo ip link set $interface up;
   sudo nmcli dev set $interface managed yes; sleep 1;
-  if [[ -n "$targs1" &&  -n "$targs2" ]]; then
-  hcxdumptool --bpfc="#BLACKLIST-MODE#($targs1 or $targs2)" > temp.targets-filter.bpf;
-  else
-  hcxdumptool --bpfc="#BLACKLIST-MODE#($targs1$targs2)" > temp.targets-filter.bpf;
-  fi;
-  sudo hcxdumptool -i $interface --rds=3 --bpf=temp.targets-filter.bpf -c #c# -t #t#;
+  hcxdumptool --bpfc="#BLACKLIST-MODE#($targs1)" > temp.targets-filter.bpf;
+  for chn in #c#; do
+  if [[ "$chn" =~ ^[0-9]+$ ]];
+  then if [ "$chn" -lt 15 ];
+  then channels+="${chn}a,";
+  else channels+="${chn}b,"; fi;
+  else channels+="$chn,"; fi; done;
+  channels=${channels%,};
+  sudo hcxdumptool -i $interface --rds=3 --bpf=temp.targets-filter.bpf -c $channels;
   rm -f ./temp.targets-filter.bpf

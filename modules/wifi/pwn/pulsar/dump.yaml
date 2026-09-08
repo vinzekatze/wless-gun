@@ -75,6 +75,7 @@ script: |-
   exit_func() { stop_mon_screen; rm -f ./temp.targets-filter.bpf; exit; };
 
   hcxdumptool --bpfc="($targs)" > temp.targets-filter.bpf;
+  mkdir -p $outdir;
   while true; do
     for chn in #channels#; do
       # Параметры

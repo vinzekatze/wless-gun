@@ -65,7 +65,6 @@ script: |-
   outdir=#dir#;
   OLDIFS=$IFS;
   targs=#bssid#;
-  channels=#channels#;
 
   # Проверки
   iw dev $interface info 2>&1 1>/dev/null || { echo "Device $interface not found"; exit ; };
@@ -77,7 +76,7 @@ script: |-
 
   hcxdumptool --bpfc="($targs)" > temp.targets-filter.bpf;
   while true; do
-    for chn in $channels; do
+    for chn in #channels#; do
       # Параметры
       hcxsfile=$(realpath $outdir/hcxdump-c${chn}-$(date +%Y%m%d%H%M%S));
       monhsfile=$(realpath $outdir/mondump-c${chn}-$(date +%Y%m%d%H%M%S));

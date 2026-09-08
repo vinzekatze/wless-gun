@@ -29,6 +29,7 @@ arguments:
     multiple: true
     metavar: BSSID
     replacer: '#BSSID#'
+    regex: '^([0-9A-Fa-f]{2}[:-]){5}([0-9A-Fa-f]{2})$|^[0-9A-Fa-f]{12}$'
   p:
     default:
       -

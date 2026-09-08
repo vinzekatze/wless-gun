@@ -1,6 +1,8 @@
 description: |- 
   Вытаскивает хендшейки из .cap и .pcapng файлов в понятном современному hashcat формате (режим 22000)
 
+  Просмотр перехваченного:
+    hcxhashtool -i hashes.hc22000 --info=stdout
 tags:
   - cap to hc22000
   - fix for hashcat

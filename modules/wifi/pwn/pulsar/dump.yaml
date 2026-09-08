@@ -71,7 +71,7 @@ script: |-
   exit_func() { stop_mon_screen; rm -f ./temp.targets-filter.bpf; exit; };
 
   # Подготовка
-  bssids=$(echo #bssid# | grep -oE '([0-9A-Fa-f]{2}[:-]){5}([0-9A-Fa-f]{2})' | tr '\n' ' ');
+  bssids=$(echo #bssid# | grep -oE '([0-9A-Fa-f]{2}[:-]){5}([0-9A-Fa-f]{2})' | xargs);
   filter_rule=$(echo "$bssids" | sed 's/ / or wlan addr3 /g; s/^/wlan addr3 /')
   hcxdumptool --bpfc="($filter_rule)" > temp.targets-filter.bpf;
   mkdir -p $outdir;

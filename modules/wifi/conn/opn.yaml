@@ -33,6 +33,8 @@ arguments:
     replacer: '#DEVNULL#'
 
 mode:
+  readfile:
+    - m
   format:
     interface: '{!r}'
     ssid: '{!r}'

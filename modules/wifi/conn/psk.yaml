@@ -40,6 +40,9 @@ arguments:
     replacer: '#DEVNULL#'
 
 mode:
+  readfile:
+    - m
+    - p
   format:
     i: '{!r}'
     s: '{!r}'

@@ -37,6 +37,14 @@ arguments:
     metavar: POWER
     replacer: '#POWER#'
     regex: '-\d+'
+  f: 
+    default:
+      -
+    description: время перечлючения между каналами (ms)
+    metavar: 'MS'
+    replacer: '#SPEED#'
+    regex: '\d+'
+  
 
 mode:
   readfile:
@@ -47,6 +55,7 @@ mode:
     o: '{!r}'
     b: '--bssid {!r}'
     p: '--min-power {!r}'
+    f: '-f {}'
   join:
     c: ','
   pformat:
@@ -60,4 +69,4 @@ script: >-
   sudo ip link set $interface down;
   sudo iw $interface set monitor control;
   sudo ip link set $interface up;
-  sudo airodump-ng $interface --output-format pcap,csv #c# --band abg --write #o# --wps #BSSID# #POWER#; 
+  sudo airodump-ng $interface --output-format pcap,csv #c# --band abg --write #o# --wps #BSSID# #POWER# #SPEED#; 

@@ -37,14 +37,12 @@ arguments:
     metavar: POWER
     replacer: '#POWER#'
     regex: '-\d+'
-  f: 
+  scan: 
     default:
       -
-    description: время перечлючения между каналами (ms)
-    metavar: 'MS'
+      - '--berlin 60 -x 20 -f 100'
+    description: режим активного сканирования
     replacer: '#SPEED#'
-    regex: '\d+'
-  
 
 mode:
   readfile:
@@ -55,7 +53,6 @@ mode:
     o: '{!r}'
     b: '--bssid {!r}'
     p: '--min-power {!r}'
-    f: '-f {}'
   join:
     c: ','
   pformat:

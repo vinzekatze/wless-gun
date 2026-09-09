@@ -57,11 +57,11 @@ script: >-
   echo "[target] ssid: $ssid";
   echo "[target] wlan: $interface";
   echo "[target] Scanning networks...";
-  sudo nmcli device wifi list ifname "$interface" --rescan yes | cat | grep --color=never $ssid && { echo -e "[target] \e[1;92mFound\e[0m"; } || { echo -e "[target] \e[1;91mNot Found\e[0m"; exit; };
+  sudo nmcli device wifi list ifname "$interface" --rescan yes | cat | grep --color=never #ssid# && { echo -e "[target] \e[1;92mFound\e[0m"; } || { echo -e "[target] \e[1;91mNot Found\e[0m"; exit; };
   echo;
   echo "Connection attempts:";
   for macaddr in #macaddr# "$randmac"; do
   echo -n "[$macaddr] ... ";
-  sudo nmcli connection add type wifi connection.autoconnect no con-name $conname ssid "$ssid" ifname "$interface" wifi.cloned-mac-address "$macaddr" #DEVNULL#;
+  sudo nmcli connection add type wifi connection.autoconnect no con-name "$conname" ssid #ssid# ifname "$interface" wifi.cloned-mac-address "$macaddr" #DEVNULL#;
   sudo nmcli connection up "$conname" #DEVNULL# && { echo -e "\e[1;92mCONNECTED\e[0m"; echo; echo "Connection info:";echo "[nmcli] name:    $conname"; nmcli --fields 'IP4.ADDRESS' connection show $conname | awk -F '[ ]+' '{print "[nmcli] ip:      " $2}'; nmcli --fields 'IP4.GATEWAY' connection show $conname | awk -F '[ ]+' '{print "[nmcli] gateway: " $2}'; break 2; } || { echo -e "\e[1;91mFAIL\e[0m"; sudo nmcli connection delete "$conname" #DEVNULL#; };
   done

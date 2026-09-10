@@ -40,7 +40,7 @@ arguments:
   scan: 
     default:
       -
-      - '--berlin 60 -x 20 -f 100'
+      - '--berlin 60 -x 50 -f 150'
     description: режим активного сканирования
     replacer: '#SPEED#'
 
